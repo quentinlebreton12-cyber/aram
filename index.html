@@ -106,9 +106,13 @@ body { font-family: system-ui, sans-serif; background: var(--bg-body); color: va
 .picker-type-up { border-top: 3px solid #639922; }
 .picker-type-down { border-top: 3px solid #A32D2D; }
 .voter-list { display: flex; flex-direction: column; gap: 6px; }
-.voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; text-align: left; transition: background 0.1s; color: var(--text-body); }
+.voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.1s; color: var(--text-body); }
 .voter-btn:hover { background: var(--row-hover); }
-.voter-btn.already-voted { opacity: 0.4; cursor: not-allowed; }
+
+/* NOUVEAU STYLE POUR ANNULER UN VOTE */
+.voter-btn.already-voted { border-color: var(--text-ban); color: var(--text-ban); background: var(--bg-ban); display: flex; justify-content: space-between; align-items: center; }
+.voter-btn.already-voted:hover { background: var(--bg-ban-hover); }
+
 .cancel-btn { margin-top: 10px; width: 100%; padding: 8px; border: none; border-radius: 8px; background: var(--cancel-btn-bg); cursor: pointer; font-size: 13px; color: var(--text-muted); }
 .cancel-btn:hover { background: var(--cancel-btn-hover); }
 .footer { text-align: center; font-size: 11px; color: var(--text-very-light); padding: 1.5rem 0 0.5rem; }
@@ -143,7 +147,7 @@ body { font-family: system-ui, sans-serif; background: var(--bg-body); color: va
     <h3 id="picker-title"></h3>
     <p id="picker-sub"></p>
     <div class="voter-list" id="voter-list"></div>
-    <button class="cancel-btn" onclick="window.closePicker()">Annuler</button>
+    <button class="cancel-btn" onclick="window.closePicker()">Fermer</button>
   </div>
 </div>
 
@@ -210,13 +214,12 @@ players.forEach(p => { upVotes[p] = {}; downVotes[p] = {}; searches[p] = ""; });
 
 let pendingVote = null;
 
-// Version sécurisée des getters pour éviter tout crash
 const getUp = (t, c) => (upVotes[t] && upVotes[t][c]) ? upVotes[t][c] : new Set();
 const getDown = (t, c) => (downVotes[t] && downVotes[t][c]) ? downVotes[t][c] : new Set();
 const isRec = (t, c) => getUp(t, c).size >= THRESHOLD;
 const isBanned = (t, c) => getDown(t, c).size >= THRESHOLD;
 
-// 1. ON CONSTRUIT D'ABORD L'INTERFACE (évite la page blanche)
+// 1. ON CONSTRUIT D'ABORD L'INTERFACE
 buildGrid();
 
 // 2. ENSUITE ON SE CONNECTE A FIREBASE
@@ -259,12 +262,23 @@ function openPicker(type, target, champ) {
   picker.className = 'picker picker-type-' + type;
   const list = document.getElementById('voter-list');
   list.innerHTML = '';
+  
   players.filter(p => p !== target).forEach(function(voter) {
     const already = voters.has(voter);
     const btn = document.createElement('button');
-    btn.className = 'voter-btn' + (already ? ' already-voted' : '');
-    btn.textContent = already ? voter + ' (déjà voté)' : voter;
-    if (!already) btn.onclick = function() { window.castVote(voter); };
+    
+    // NOUVELLE LOGIQUE POUR L'AFFICHAGE DU BOUTON
+    if (already) {
+      btn.className = 'voter-btn already-voted';
+      btn.innerHTML = `<span>${voter}</span> <i class="ti ti-x"></i>`;
+      btn.title = "Retirer mon vote";
+      btn.onclick = function() { window.removeVote(voter); };
+    } else {
+      btn.className = 'voter-btn';
+      btn.textContent = voter;
+      btn.onclick = function() { window.castVote(voter); };
+    }
+    
     list.appendChild(btn);
   });
   document.getElementById('overlay').style.display = 'flex';
@@ -288,6 +302,21 @@ window.castVote = function(voter) {
   });
 };
 
+// NOUVELLE FONCTION POUR SUPPRIMER UN VOTE
+window.removeVote = function(voter) {
+  const type = pendingVote.type;
+  const target = pendingVote.target;
+  const champ = pendingVote.champ;
+  
+  const basePath = type === 'up' ? 'upVotes' : 'downVotes';
+  const voteRef = ref(db, `votes/${basePath}/${target}/${champ}/${voter}`);
+  
+  // En envoyant "null", Firebase supprime la donnée !
+  set(voteRef, null).then(() => {
+    window.closePicker();
+  });
+};
+
 function renderPlayer(player) {
   const search = searches[player].toLowerCase();
   let filtered = champions.filter(function(c) { return c.toLowerCase().indexOf(search) !== -1; });
@@ -297,11 +326,9 @@ function renderPlayer(player) {
     const votesA = getUp(player, a).size + getDown(player, a).size;
     const votesB = getUp(player, b).size + getDown(player, b).size;
     
-    // Si un champion a plus de votes que l'autre, on le met au-dessus
     if (votesA !== votesB) {
       return votesB - votesA;
     }
-    // Sinon, on garde l'ordre alphabétique
     return a.localeCompare(b);
   });
 
