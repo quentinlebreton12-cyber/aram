@@ -8,7 +8,7 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* 1. CONFIGURATION DES THEMES (VARIABLES) */
+/* VARIABLES DE THEMES */
 :root {
   --bg-body: #f4f3ef;
   --text-body: #1a1a1a;
@@ -55,7 +55,6 @@
   --text-ban: #ff8585;
 }
 
-/* 2. STYLES APPLIQUANT LES VARIABLES */
 body { font-family: system-ui, sans-serif; background: var(--bg-body); color: var(--text-body); min-height: 100vh; transition: background 0.2s, color 0.2s; }
 .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
 .header { padding-bottom: 1rem; border-bottom: 1px solid var(--border-input); margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -65,11 +64,347 @@ body { font-family: system-ui, sans-serif; background: var(--bg-body); color: va
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
 .dot { width: 8px; height: 8px; border-radius: 50%; }
 
-/* Bouton Dark Mode */
 .theme-toggle { background: transparent; border: 1px solid var(--border-input); padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--text-body); display: flex; align-items: center; gap: 6px; font-size: 12px; transition: all 0.1s; }
 .theme-toggle:hover { background: var(--row-hover); border-color: var(--text-very-light); }
 
 .players-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
 .player-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; transition: background 0.2s, border-color 0.2s; }
 .player-header { padding: 10px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); }
-.player-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex;
+.player-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+.player-name { font-size: 14px; font-weight: 500; color: var(--text-body); }
+.player-stats { font-size: 11px; color: var(--text-light); margin-top: 1px; display: flex; gap: 6px; }
+.stat-rec { color: var(--text-rec); }
+.stat-ban { color: var(--text-ban); }
+.search-bar { position: relative; padding: 6px 10px; }
+.search-bar input { width: 100%; padding: 5px 8px 5px 28px; font-size: 12px; border: 1px solid var(--border-input); border-radius: 8px; background: var(--bg-input); color: var(--text-body); outline: none; }
+.search-bar input:focus { border-color: var(--text-very-light); }
+.search-bar i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-very-light); pointer-events: none; }
+.champ-list { padding: 4px 0; max-height: 320px; overflow-y: auto; }
+.champ-row { display: flex; align-items: center; padding: 4px 8px; gap: 5px; transition: background 0.1s; }
+.champ-row:hover { background: var(--row-hover); }
+.champ-row.recommended { background: var(--bg-rec); }
+.champ-row.recommended:hover { background: var(--bg-rec-hover); }
+.champ-row.banned { background: var(--bg-ban); }
+.champ-row.banned:hover { background: var(--bg-ban-hover); }
+.champ-name { font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body); }
+.champ-row.recommended .champ-name { color: var(--text-rec); font-weight: 500; }
+.champ-row.banned .champ-name { color: var(--text-ban); font-weight: 500; text-decoration: line-through; }
+.vote-area { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.vbtn { width: 20px; height: 20px; border: 1px solid var(--border-input); border-radius: 5px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-light); transition: all 0.1s; padding: 0; }
+.vbtn.up:hover { background: var(--bg-rec); border-color: #97C459; color: var(--text-rec); }
+.vbtn.down:hover { background: var(--bg-ban); border-color: #F09595; color: var(--text-ban); }
+.vcnt { font-size: 10px; font-weight: 500; min-width: 14px; text-align: center; color: var(--text-very-light); }
+.vcnt.up-active { color: var(--text-rec); }
+.vcnt.down-active { color: var(--text-ban); }
+.status-badge { font-size: 10px; font-weight: 500; border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+.badge-rec { background: var(--text-rec); color: var(--bg-card); }
+.badge-ban { background: var(--text-ban); color: var(--bg-card); }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.picker { background: var(--picker-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.25rem; width: 280px; color: var(--text-body); }
+.picker h3 { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.picker p { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.picker-type-up { border-top: 3px solid #639922; }
+.picker-type-down { border-top: 3px solid #A32D2D; }
+.voter-list { display: flex; flex-direction: column; gap: 6px; }
+.voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; text-align: left; transition: background 0.1s; color: var(--text-body); }
+.voter-btn:hover { background: var(--row-hover); }
+.voter-btn.already-voted { opacity: 0.4; cursor: not-allowed; }
+.cancel-btn { margin-top: 10px; width: 100%; padding: 8px; border: none; border-radius: 8px; background: var(--cancel-btn-bg); cursor: pointer; font-size: 13px; color: var(--text-muted); }
+.cancel-btn:hover { background: var(--cancel-btn-hover); }
+.footer { text-align: center; font-size: 11px; color: var(--text-very-light); padding: 1.5rem 0 0.5rem; }
+</style>
+<script>
+  if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+</script>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1><i class="ti ti-sword" style="font-size:18px;vertical-align:-2px;margin-right:6px"></i>Bans ARAM</h1>
+      <p>3 votes requis pour verrouiller un statut</p>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:#639922"></div> Fortement recommandé</div>
+        <div class="legend-item"><div class="dot" style="background:#A32D2D"></div> Banni</div>
+      </div>
+    </div>
+    <button id="theme-toggle" class="theme-toggle">
+      <i class="ti ti-moon" id="theme-icon"></i> <span id="theme-text">Mode Sombre</span>
+    </button>
+  </div>
+  <div class="players-grid" id="players-grid"></div>
+  <div class="footer">3 votes requis pour verrouiller un statut</div>
+</div>
+
+<div class="overlay" id="overlay" style="display:none" onclick="if(event.target===this) window.closePicker()">
+  <div class="picker" id="picker">
+    <h3 id="picker-title"></h3>
+    <p id="picker-sub"></p>
+    <div class="voter-list" id="voter-list"></div>
+    <button class="cancel-btn" onclick="window.closePicker()">Annuler</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDndpGMcH8iXz7ytKpYWBHGy4nmxC0fChE",
+  authDomain: "aram-22ce9.firebaseapp.com",
+  databaseURL: "https://aram-22ce9-default-rtdb.firebaseio.com",
+  projectId: "aram-22ce9",
+  storageBucket: "aram-22ce9.firebasestorage.app",
+  messagingSenderId: "948111492330",
+  appId: "1:948111492330:web:2217feb3f450e3e31a4393",
+  measurementId: "G-BPYG57WLG4"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// GESTION DU THEME
+const toggleBtn = document.getElementById('theme-toggle');
+const themeIcon = document.getElementById('theme-icon');
+const themeText = document.getElementById('theme-text');
+
+if (document.documentElement.getAttribute('data-theme') === 'dark') {
+  themeIcon.className = 'ti ti-sun';
+  themeText.textContent = 'Mode Clair';
+}
+
+toggleBtn.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'light');
+    themeIcon.className = 'ti ti-moon';
+    themeText.textContent = 'Mode Sombre';
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+    themeIcon.className = 'ti ti-sun';
+    themeText.textContent = 'Mode Clair';
+  }
+});
+
+// LOGIQUE DES JEUX
+const THRESHOLD = 3;
+const players = ["Manu","Arthur","Nathan","Quentin","Aymeric","Vincent"];
+const playerColors = {
+  Manu:    { avatar:"#B5D4F4", text:"#185FA5" },
+  Arthur:  { avatar:"#F7C1C1", text:"#A32D2D" },
+  Nathan:  { avatar:"#C0DD97", text:"#3B6D11" },
+  Quentin: { avatar:"#FAC775", text:"#854F0B" },
+  Aymeric: { avatar:"#CECBF6", text:"#534AB7" },
+  Vincent: { avatar:"#9FE1CB", text:"#0F6E56" },
+};
+const champions = ["Aatrox","Ahri","Akali","Akshan","Alistar","Ambessa","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Aurora","Azir","Bard","Bel'Veth","Blitzcrank","Brand","Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks","Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","Jarvan IV","Jax","Jayce","Jhin","Jinx","K'Sante","Kai'Sa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","Kha'Zix","Kindred","Kled","Kog'Maw","LeBlanc","Lee Sin","Leona","Lillia","Lissandra","Lucian","Lulu","Lux","Malphite","Malzahar","Maokai","Master Yi","Milio","Miss Fortune","Mordekaiser","Morgana","Naafiri","Nami","Nasus","Nautilus","Neeko","Nidalee","Nilah","Nocturne","Nunu & Willump","Olaf","Orianna","Ornn","Pantheon","Poppy","Pyke","Qiyana","Quinn","Rakan","Rammus","Rek'Sai","Rell","Renata Glasc","Renekton","Rengar","Riven","Rumble","Ryze","Samira","Sejuani","Senna","Seraphine","Sett","Shaco","Shen","Shyvana","Singed","Sion","Sivir","Skarner","Smolder","Sona","Soraka","Swain","Sylas","Syndra","Tahm Kench","Taliyah","Talon","Taric","Teemo","Thresh","Tristana","Trundle","Tryndamere","Twisted Fate","Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo","Yone","Yorick","Yunara","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"];
+
+let upVotes = {};
+let downVotes = {};
+const searches = {};
+players.forEach(p => { upVotes[p] = {}; downVotes[p] = {}; searches[p] = ""; });
+
+let pendingVote = null;
+
+// Version sécurisée des getters pour éviter tout crash
+const getUp = (t, c) => (upVotes[t] && upVotes[t][c]) ? upVotes[t][c] : new Set();
+const getDown = (t, c) => (downVotes[t] && downVotes[t][c]) ? downVotes[t][c] : new Set();
+const isRec = (t, c) => getUp(t, c).size >= THRESHOLD;
+const isBanned = (t, c) => getDown(t, c).size >= THRESHOLD;
+
+// 1. ON CONSTRUIT D'ABORD L'INTERFACE (évite la page blanche)
+buildGrid();
+
+// 2. ENSUITE ON SE CONNECTE A FIREBASE
+const votesRef = ref(db, 'votes');
+onValue(votesRef, (snapshot) => {
+  const data = snapshot.val() || { upVotes: {}, downVotes: {} };
+  
+  players.forEach(p => { upVotes[p] = {}; downVotes[p] = {}; });
+
+  if (data.upVotes) {
+    for (const target in data.upVotes) {
+      for (const champ in data.upVotes[target]) {
+        if (!upVotes[target]) upVotes[target] = {};
+        upVotes[target][champ] = new Set(Object.keys(data.upVotes[target][champ]));
+      }
+    }
+  }
+
+  if (data.downVotes) {
+    for (const target in data.downVotes) {
+      for (const champ in data.downVotes[target]) {
+        if (!downVotes[target]) downVotes[target] = {};
+        downVotes[target][champ] = new Set(Object.keys(data.downVotes[target][champ]));
+      }
+    }
+  }
+
+  players.forEach(p => renderPlayer(p));
+});
+
+function openPicker(type, target, champ) {
+  if (type === 'up' && isRec(target, champ)) return;
+  if (type === 'down' && isBanned(target, champ)) return;
+  pendingVote = { type, target, champ };
+  const voters = type === 'up' ? getUp(target, champ) : getDown(target, champ);
+  const label = type === 'up' ? 'Recommander' : 'Bannir';
+  document.getElementById('picker-title').textContent = label + ' ' + champ + ' pour ' + target;
+  document.getElementById('picker-sub').textContent = voters.size + '/' + THRESHOLD + ' votes — qui es-tu ?';
+  const picker = document.getElementById('picker');
+  picker.className = 'picker picker-type-' + type;
+  const list = document.getElementById('voter-list');
+  list.innerHTML = '';
+  players.filter(p => p !== target).forEach(function(voter) {
+    const already = voters.has(voter);
+    const btn = document.createElement('button');
+    btn.className = 'voter-btn' + (already ? ' already-voted' : '');
+    btn.textContent = already ? voter + ' (déjà voté)' : voter;
+    if (!already) btn.onclick = function() { window.castVote(voter); };
+    list.appendChild(btn);
+  });
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+window.closePicker = function() {
+  document.getElementById('overlay').style.display = 'none';
+  pendingVote = null;
+};
+
+window.castVote = function(voter) {
+  const type = pendingVote.type;
+  const target = pendingVote.target;
+  const champ = pendingVote.champ;
+  
+  const basePath = type === 'up' ? 'upVotes' : 'downVotes';
+  const voteRef = ref(db, `votes/${basePath}/${target}/${champ}/${voter}`);
+  
+  set(voteRef, true).then(() => {
+    window.closePicker();
+  });
+};
+
+function renderPlayer(player) {
+  const search = searches[player].toLowerCase();
+  let filtered = champions.filter(function(c) { return c.toLowerCase().indexOf(search) !== -1; });
+  
+  // TRI PAR NOMBRE DE VOTES
+  filtered.sort(function(a, b) {
+    const votesA = getUp(player, a).size + getDown(player, a).size;
+    const votesB = getUp(player, b).size + getDown(player, b).size;
+    
+    // Si un champion a plus de votes que l'autre, on le met au-dessus
+    if (votesA !== votesB) {
+      return votesB - votesA;
+    }
+    // Sinon, on garde l'ordre alphabétique
+    return a.localeCompare(b);
+  });
+
+  const recCount = champions.filter(function(c) { return isRec(player, c); }).length;
+  const banCount = champions.filter(function(c) { return isBanned(player, c); }).length;
+
+  const card = document.getElementById('card-' + player);
+  if (!card) return;
+  const statsEl = card.querySelector('.player-stats');
+  const parts = [];
+  if (recCount > 0) parts.push('<span class="stat-rec">' + recCount + ' rec.</span>');
+  if (banCount > 0) parts.push('<span class="stat-ban">' + banCount + ' ban' + (banCount > 1 ? 's' : '') + '</span>');
+  statsEl.innerHTML = parts.length ? parts.join('<span style="color:var(--border-input)"> · </span>') : '<span>aucun statut</span>';
+
+  const listEl = card.querySelector('.champ-list');
+  listEl.innerHTML = '';
+
+  filtered.forEach(function(champ) {
+    const rec = isRec(player, champ);
+    const banned = isBanned(player, champ);
+    const upV = getUp(player, champ);
+    const downV = getDown(player, champ);
+
+    const row = document.createElement('div');
+    row.className = 'champ-row' + (rec ? ' recommended' : banned ? ' banned' : '');
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'champ-name';
+    nameEl.textContent = champ;
+    row.appendChild(nameEl);
+
+    if (rec || banned) {
+      const badge = document.createElement('span');
+      badge.className = 'status-badge ' + (rec ? 'badge-rec' : 'badge-ban');
+      const voters = rec ? upV : downV;
+      badge.title = 'Par : ' + Array.from(voters).join(', ');
+      badge.textContent = rec ? 'recommandé' : 'banni';
+      row.appendChild(badge);
+    } else {
+      const voteArea = document.createElement('div');
+      voteArea.className = 'vote-area';
+
+      const upCnt = document.createElement('span');
+      upCnt.className = 'vcnt' + (upV.size > 0 ? ' up-active' : '');
+      upCnt.textContent = upV.size > 0 ? upV.size : '';
+      upCnt.title = upV.size > 0 ? 'Votes de : ' + Array.from(upV).join(', ') : '';
+
+      const upBtn = document.createElement('button');
+      upBtn.className = 'vbtn up';
+      upBtn.title = 'Recommander';
+      upBtn.innerHTML = '<i class="ti ti-thumb-up"></i>';
+      upBtn.onclick = function() { openPicker('up', player, champ); };
+
+      const downCnt = document.createElement('span');
+      downCnt.className = 'vcnt' + (downV.size > 0 ? ' down-active' : '');
+      downCnt.textContent = downV.size > 0 ? downV.size : '';
+      downCnt.title = downV.size > 0 ? 'Votes de : ' + Array.from(downV).join(', ') : '';
+
+      const downBtn = document.createElement('button');
+      downBtn.className = 'vbtn down';
+      downBtn.title = 'Bannir';
+      downBtn.innerHTML = '<i class="ti ti-thumb-down"></i>';
+      downBtn.onclick = function() { openPicker('down', player, champ); };
+
+      voteArea.appendChild(upCnt);
+      voteArea.appendChild(upBtn);
+      voteArea.appendChild(downCnt);
+      voteArea.appendChild(downBtn);
+      row.appendChild(voteArea);
+    }
+
+    listEl.appendChild(row);
+  });
+}
+
+function buildGrid() {
+  const grid = document.getElementById('players-grid');
+  players.forEach(function(player) {
+    const col = playerColors[player];
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    card.id = 'card-' + player;
+    card.innerHTML =
+      '<div class="player-header">' +
+        '<div class="player-avatar" style="background:' + col.avatar + ';color:' + col.text + '">' + player.slice(0,2).toUpperCase() + '</div>' +
+        '<div>' +
+          '<div class="player-name">' + player + '</div>' +
+          '<div class="player-stats"><span>aucun statut</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="search-bar">' +
+        '<i class="ti ti-search"></i>' +
+        '<input type="text" placeholder="Chercher..." id="search-' + player + '">' +
+      '</div>' +
+      '<div class="champ-list"></div>';
+    grid.appendChild(card);
+
+    document.getElementById('search-' + player).addEventListener('input', function() {
+      searches[player] = this.value;
+      renderPlayer(player);
+    });
+  });
+}
+</script>
+</body>
+</html>
