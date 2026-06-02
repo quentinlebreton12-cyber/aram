@@ -6,6 +6,7 @@
 <title>ARAM Bans</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
+/* CSS inchangé */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: system-ui, sans-serif; background: #f4f3ef; color: #1a1a1a; min-height: 100vh; }
 .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
@@ -76,16 +77,38 @@ body { font-family: system-ui, sans-serif; background: #f4f3ef; color: #1a1a1a; 
   <div class="footer">3 votes requis pour verrouiller un statut</div>
 </div>
 
-<div class="overlay" id="overlay" style="display:none" onclick="if(event.target===this)closePicker()">
+<div class="overlay" id="overlay" style="display:none" onclick="if(event.target===this) window.closePicker()">
   <div class="picker" id="picker">
     <h3 id="picker-title"></h3>
     <p id="picker-sub"></p>
     <div class="voter-list" id="voter-list"></div>
-    <button class="cancel-btn" onclick="closePicker()">Annuler</button>
+    <button class="cancel-btn" onclick="window.closePicker()">Annuler</button>
   </div>
 </div>
 
-<script>
+<!-- L'attribut type="module" est OBLIGATOIRE pour pouvoir importer Firebase -->
+<script type="module">
+// 1. IMPORTATION DE FIREBASE
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+// 2. TA CONFIGURATION FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyDndpGMcH8iXz7ytKpYWBHGy4nmxC0fChE",
+  authDomain: "aram-22ce9.firebaseapp.com",
+  databaseURL: "https://aram-22ce9-default-rtdb.firebaseio.com",
+  projectId: "aram-22ce9",
+  storageBucket: "aram-22ce9.firebasestorage.app",
+  messagingSenderId: "948111492330",
+  appId: "1:948111492330:web:2217feb3f450e3e31a4393",
+  measurementId: "G-BPYG57WLG4"
+};
+
+// INITIALISATION
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// 3. LOGIQUE DU JEU
 const THRESHOLD = 3;
 const players = ["Manu","Arthur","Nathan","Quentin","Aymeric","Vincent"];
 const playerColors = {
@@ -98,8 +121,8 @@ const playerColors = {
 };
 const champions = ["Aatrox","Ahri","Akali","Akshan","Alistar","Ambessa","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Aurora","Azir","Bard","Bel'Veth","Blitzcrank","Brand","Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks","Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","Jarvan IV","Jax","Jayce","Jhin","Jinx","K'Sante","Kai'Sa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","Kha'Zix","Kindred","Kled","Kog'Maw","LeBlanc","Lee Sin","Leona","Lillia","Lissandra","Lucian","Lulu","Lux","Malphite","Malzahar","Maokai","Master Yi","Milio","Miss Fortune","Mordekaiser","Morgana","Naafiri","Nami","Nasus","Nautilus","Neeko","Nidalee","Nilah","Nocturne","Nunu & Willump","Olaf","Orianna","Ornn","Pantheon","Poppy","Pyke","Qiyana","Quinn","Rakan","Rammus","Rek'Sai","Rell","Renata Glasc","Renekton","Rengar","Riven","Rumble","Ryze","Samira","Sejuani","Senna","Seraphine","Sett","Shaco","Shen","Shyvana","Singed","Sion","Sivir","Skarner","Smolder","Sona","Soraka","Swain","Sylas","Syndra","Tahm Kench","Taliyah","Talon","Taric","Teemo","Thresh","Tristana","Trundle","Tryndamere","Twisted Fate","Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo","Yone","Yorick","Yunara","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"];
 
-const upVotes = {};
-const downVotes = {};
+let upVotes = {};
+let downVotes = {};
 const searches = {};
 players.forEach(p => { upVotes[p] = {}; downVotes[p] = {}; searches[p] = ""; });
 
@@ -109,6 +132,38 @@ const getUp = (t, c) => upVotes[t][c] || new Set();
 const getDown = (t, c) => downVotes[t][c] || new Set();
 const isRec = (t, c) => getUp(t, c).size >= THRESHOLD;
 const isBanned = (t, c) => getDown(t, c).size >= THRESHOLD;
+
+// 4. ÉCOUTE DE LA BASE DE DONNÉES EN TEMPS RÉEL
+const votesRef = ref(db, 'votes');
+onValue(votesRef, (snapshot) => {
+  const data = snapshot.val() || { upVotes: {}, downVotes: {} };
+  
+  // Réinitialisation des votes locaux
+  players.forEach(p => { upVotes[p] = {}; downVotes[p] = {}; });
+
+  // Reconstruction des Sets avec les données de Firebase
+  if (data.upVotes) {
+    for (const target in data.upVotes) {
+      for (const champ in data.upVotes[target]) {
+        if (!upVotes[target]) upVotes[target] = {};
+        upVotes[target][champ] = new Set(Object.keys(data.upVotes[target][champ]));
+      }
+    }
+  }
+
+  if (data.downVotes) {
+    for (const target in data.downVotes) {
+      for (const champ in data.downVotes[target]) {
+        if (!downVotes[target]) downVotes[target] = {};
+        downVotes[target][champ] = new Set(Object.keys(data.downVotes[target][champ]));
+      }
+    }
+  }
+
+  // Mise à jour de l'affichage pour tous les joueurs
+  players.forEach(p => renderPlayer(p));
+});
+
 
 function openPicker(type, target, champ) {
   if (type === 'up' && isRec(target, champ)) return;
@@ -127,27 +182,32 @@ function openPicker(type, target, champ) {
     const btn = document.createElement('button');
     btn.className = 'voter-btn' + (already ? ' already-voted' : '');
     btn.textContent = already ? voter + ' (déjà voté)' : voter;
-    if (!already) btn.onclick = function() { castVote(voter); };
+    if (!already) btn.onclick = function() { window.castVote(voter); };
     list.appendChild(btn);
   });
   document.getElementById('overlay').style.display = 'flex';
 }
 
-function castVote(voter) {
+// Global window attachment for HTML onclick integration
+window.closePicker = function() {
+  document.getElementById('overlay').style.display = 'none';
+  pendingVote = null;
+};
+
+window.castVote = function(voter) {
   const type = pendingVote.type;
   const target = pendingVote.target;
   const champ = pendingVote.champ;
-  const store = type === 'up' ? upVotes : downVotes;
-  if (!store[target][champ]) store[target][champ] = new Set();
-  store[target][champ].add(voter);
-  closePicker();
-  renderPlayer(target);
-}
-
-function closePicker() {
-  document.getElementById('overlay').style.display = 'none';
-  pendingVote = null;
-}
+  
+  // Création du chemin d'enregistrement sur Firebase : votes/upVotes/Target/Champion/Voter
+  const basePath = type === 'up' ? 'upVotes' : 'downVotes';
+  const voteRef = ref(db, `votes/${basePath}/${target}/${champ}/${voter}`);
+  
+  // Envoi à Firebase
+  set(voteRef, true).then(() => {
+    window.closePicker();
+  });
+};
 
 function renderPlayer(player) {
   const search = searches[player].toLowerCase();
@@ -156,6 +216,7 @@ function renderPlayer(player) {
   const banCount = champions.filter(function(c) { return isBanned(player, c); }).length;
 
   const card = document.getElementById('card-' + player);
+  if (!card) return; // Sécurité si le render se déclenche avant la création de la grille
   const statsEl = card.querySelector('.player-stats');
   const parts = [];
   if (recCount > 0) parts.push('<span class="stat-rec">' + recCount + ' rec.</span>');
