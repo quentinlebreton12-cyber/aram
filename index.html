@@ -112,6 +112,28 @@ body::before {
   padding: 10px !important;
 }
 
+[data-theme="dark"] .champ-list {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5263 #1a1d24;
+}
+
+[data-theme="dark"] .champ-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+[data-theme="dark"] .champ-list::-webkit-scrollbar-track {
+  background: #1a1d24;
+}
+
+[data-theme="dark"] .champ-list::-webkit-scrollbar-thumb {
+  background: #4a5263;
+  border-radius: 8px;
+}
+
+[data-theme="dark"] .champ-list::-webkit-scrollbar-thumb:hover {
+  background: #667085;
+}
+  
 .champ-row { 
   display: flex !important; 
   justify-content: space-between !important;
