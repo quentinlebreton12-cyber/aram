@@ -836,44 +836,52 @@ window.renderStatsTab = function() {
   });
 };
 
-// Remplace ton bloc renderHistoryTab actuel par celui-ci :
 window.renderHistoryTab = async () => {
   const container = document.getElementById('history-list');
   container.innerHTML = '<p style="text-align:center;">Chargement...</p>';
 
   try {
-    // Utilisation directe de 'get' et 'ref' importés dans ton module
     const snapshot = await get(ref(db, 'games'));
     const data = snapshot.val();
     
     if (!data) {
-      container.innerHTML = '<p style="text-align:center;">Aucune partie enregistrée.</p>';
+      container.innerHTML = '<p style="text-align:center;">Aucune partie trouvée.</p>';
       return;
     }
 
     container.innerHTML = '';
     Object.entries(data).reverse().forEach(([id, game]) => {
       const details = document.createElement('details');
-      details.style.marginBottom = "10px";
-      details.style.border = "1px solid var(--border-color)";
-      details.style.borderRadius = "8px";
-      details.style.backgroundColor = "var(--bg-card)";
+      details.className = "game-card"; // Utilise tes classes CSS existantes
+      details.style.marginBottom = "15px";
       
-      let playersHtml = (game.players || []).map(p => `
-        <div style="display:flex; justify-content:space-between; font-size:12px; padding:4px 0;">
-          <span>${p.playerName || p.name} (${p.champion})</span>
-          <span>${p.kills}/${p.deaths}/${p.assists}</span>
-        </div>
-      `).join('');
+      // On génère la liste des joueurs avec leurs portraits
+      let playersHtml = (game.players || []).map(p => {
+        // Nettoyage du nom pour l'URL Riot (ex: "Cho'Gath" -> "Chogath")
+        const champName = (p.champion || 'Aatrox').replace(/[^a-zA-Z]/g, '');
+        const champImg = `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champName}.png`;
+        
+        return `
+          <div style="display:flex; align-items:center; padding:8px 0; border-top:1px solid var(--border-color);">
+            <img src="${champImg}" style="width:32px; height:32px; border-radius:50%; margin-right:10px;">
+            <div style="flex-grow:1;">
+              <div style="font-weight:bold;">${p.playerName || p.name}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${p.champion}</div>
+            </div>
+            <div style="text-align:right; font-family:monospace;">
+              <div>${p.kills}/${p.deaths}/${p.assists}</div>
+              <div style="color:var(--text-rec); font-size:12px;">${p.damage.toLocaleString()} pts</div>
+            </div>
+          </div>
+        `;
+      }).join('');
 
       details.innerHTML = `
-        <summary style="cursor:pointer; padding:10px; font-weight:bold; color:${game.victory ? 'var(--text-rec)' : 'var(--text-ban)'};">
-          ${game.victory ? '✅ VICTOIRE' : '❌ DÉFAITE'} 
-          <span style="font-size:0.8em; color:var(--text-muted); float:right;">${new Date(game.timestamp).toLocaleDateString()}</span>
+        <summary style="cursor:pointer; padding:12px; font-weight:bold; background:${game.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${game.victory ? 'var(--text-rec)' : 'var(--text-ban)'}; border-radius:8px;">
+          ${game.victory ? 'VICTOIRE' : 'DÉFAITE'}
+          <span style="float:right; opacity:0.6; font-size:0.8em;">${new Date(game.timestamp).toLocaleDateString()}</span>
         </summary>
-        <div style="padding:15px; border-top:1px solid var(--border-color);">
-          ${playersHtml}
-        </div>
+        <div style="padding:10px;">${playersHtml}</div>
       `;
       container.appendChild(details);
     });
