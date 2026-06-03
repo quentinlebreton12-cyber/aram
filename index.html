@@ -136,8 +136,39 @@ body { font-family: system-ui, sans-serif; background: var(--bg-body); color: va
       <i class="ti ti-moon" id="theme-icon"></i> <span id="theme-text">Mode Sombre</span>
     </button>
   </div>
-  <div class="players-grid" id="players-grid"></div>
-  <div class="footer">3 votes requis pour verrouiller un statut</div>
+<div id="team-card" class="player-card" style="margin-bottom:12px;">
+  <div class="player-header">
+    <div class="player-avatar" style="background:#FFD966;color:#8A5A00">
+      <i class="ti ti-crown"></i>
+    </div>
+    <div>
+      <div class="player-name">Équipe type ARAM</div>
+      <div class="player-stats">
+        <span>Composition optimale selon les votes</span>
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px" id="team-content"></div>
+</div>
+
+<div id="fun-card" class="player-card" style="margin-bottom:12px;">
+  <div class="player-header">
+    <div class="player-avatar" style="background:#D6CCFF;color:#4E3BB3">
+      <i class="ti ti-chart-bar"></i>
+    </div>
+    <div>
+      <div class="player-name">Stats inutiles mais importantes</div>
+      <div class="player-stats">
+        <span>Analyse totalement scientifique</span>
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px" id="fun-content"></div>
+</div>
+
+<div class="players-grid" id="players-grid"></div>
+
+<div class="footer">3 votes requis pour verrouiller un statut</div>
 </div>
 
 <div class="overlay" id="overlay" style="display:none" onclick="if(event.target===this) window.closePicker()">
@@ -204,7 +235,53 @@ const playerColors = {
   Vincent: { avatar:"#9FE1CB", text:"#0F6E56" },
 };
 const champions = ["Aatrox","Ahri","Akali","Akshan","Alistar","Ambessa","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Aurora","Azir","Bard","Bel'Veth","Blitzcrank","Brand","Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks","Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","Jarvan IV","Jax","Jayce","Jhin","Jinx","K'Sante","Kai'Sa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","Kha'Zix","Kindred","Kled","Kog'Maw","LeBlanc","Lee Sin","Leona","Lillia","Lissandra","Lucian","Lulu","Lux","Malphite","Malzahar","Maokai","Master Yi","Milio","Miss Fortune","Mordekaiser","Morgana","Naafiri","Nami","Nasus","Nautilus","Neeko","Nidalee","Nilah","Nocturne","Nunu & Willump","Olaf","Orianna","Ornn","Pantheon","Poppy","Pyke","Qiyana","Quinn","Rakan","Rammus","Rek'Sai","Rell","Renata Glasc","Renekton","Rengar","Riven","Rumble","Ryze","Samira","Sejuani","Senna","Seraphine","Sett","Shaco","Shen","Shyvana","Singed","Sion","Sivir","Skarner","Smolder","Sona","Soraka","Swain","Sylas","Syndra","Tahm Kench","Taliyah","Talon","Taric","Teemo","Thresh","Tristana","Trundle","Tryndamere","Twisted Fate","Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo","Yone","Yorick","Yunara","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra","Zaahen"];
+const championRoles = {
+  "Leona":"tank",
+  "Nautilus":"tank",
+  "Maokai":"tank",
+  "Ornn":"tank",
+  "Malphite":"tank",
+  "Amumu":"tank",
+  "Rammus":"tank",
+  "Sion":"tank",
+  "Tahm Kench":"tank",
+  "Braum":"tank",
 
+  "Jinx":"adc",
+  "Caitlyn":"adc",
+  "Varus":"adc",
+  "Ashe":"adc",
+  "Senna":"adc",
+  "Miss Fortune":"adc",
+  "Kai'Sa":"adc",
+  "Ezreal":"adc",
+  "Lucian":"adc",
+  "Jhin":"adc",
+  "Kog'Maw":"adc",
+  "Zeri":"adc",
+
+  "Lux":"ap",
+  "Xerath":"ap",
+  "Ziggs":"ap",
+  "Brand":"ap",
+  "Veigar":"ap",
+  "Hwei":"ap",
+  "Viktor":"ap",
+  "Syndra":"ap",
+  "Swain":"ap",
+  "Vel'Koz":"ap",
+
+  "Soraka":"support",
+  "Sona":"support",
+  "Janna":"support",
+  "Nami":"support",
+  "Lulu":"support",
+  "Milio":"support",
+  "Renata Glasc":"support",
+  "Taric":"support",
+  "Seraphine":"support",
+  "Yuumi":"support"
+};
 let upVotes = {};
 let downVotes = {};
 const searches = {};
@@ -219,6 +296,9 @@ const isBanned = (t, c) => getDown(t, c).size >= THRESHOLD;
 
 // 1. ON CONSTRUIT D'ABORD L'INTERFACE
 buildGrid();
+
+renderTeamComp();
+renderFunStats();
 
 // 2. ENSUITE ON SE CONNECTE A FIREBASE
 const votesRef = ref(db, 'votes');
@@ -245,7 +325,10 @@ onValue(votesRef, (snapshot) => {
     }
   }
 
-  players.forEach(p => renderPlayer(p));
+players.forEach(p => renderPlayer(p));
+
+renderTeamComp();
+renderFunStats();
 });
 
 function openPicker(type, target, champ) {
@@ -440,6 +523,128 @@ function buildGrid() {
       renderPlayer(player);
     });
   });
+}
+  function championScore(champ) {
+  let score = 0;
+
+  players.forEach(player => {
+    score += getUp(player, champ).size * 3;
+    score -= getDown(player, champ).size * 2;
+
+    if (isRec(player, champ)) score += 10;
+    if (isBanned(player, champ)) score -= 10;
+  });
+
+  return score;
+}
+
+function bestChampion(role, used) {
+  return champions
+    .filter(c => championRoles[c] === role && !used.has(c))
+    .sort((a,b) => championScore(b) - championScore(a))[0];
+}
+
+function renderTeamComp() {
+
+  const used = new Set();
+
+  const tank = bestChampion("tank", used);
+  if (tank) used.add(tank);
+
+  const adc = bestChampion("adc", used);
+  if (adc) used.add(adc);
+
+  const ap = bestChampion("ap", used);
+  if (ap) used.add(ap);
+
+  const support = bestChampion("support", used);
+  if (support) used.add(support);
+
+  const flex = champions
+    .filter(c => !used.has(c))
+    .sort((a,b) => championScore(b) - championScore(a))[0];
+
+  const team = [tank, adc, ap, support, flex].filter(Boolean);
+
+  document.getElementById("team-content").innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      ${team.map(champ =>
+        `<span class="status-badge badge-rec">${champ}</span>`
+      ).join("")}
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--text-muted)">
+      Tank : ${tank || "-"}<br>
+      ADC : ${adc || "-"}<br>
+      AP : ${ap || "-"}<br>
+      Support : ${support || "-"}<br>
+      Flex : ${flex || "-"}
+    </div>
+  `;
+}
+
+function renderFunStats() {
+
+  let biggestVictim = "";
+  let biggestVictimCount = -1;
+
+  let mostLoved = "";
+  let mostLovedVotes = -1;
+
+  let mostHated = "";
+  let mostHatedVotes = -1;
+
+  players.forEach(player => {
+
+    let bans = 0;
+    let recs = 0;
+
+    champions.forEach(champ => {
+      if (isBanned(player, champ)) bans++;
+      if (isRec(player, champ)) recs++;
+    });
+
+    if (bans > biggestVictimCount) {
+      biggestVictim = player;
+      biggestVictimCount = bans;
+    }
+
+    if (recs > mostLovedVotes) {
+      mostLoved = player;
+      mostLovedVotes = recs;
+    }
+
+    if (bans > mostHatedVotes) {
+      mostHated = player;
+      mostHatedVotes = bans;
+    }
+  });
+
+  let mostControversial = "";
+  let controversialScore = -1;
+
+  champions.forEach(champ => {
+
+    let score = 0;
+
+    players.forEach(player => {
+      score += getUp(player, champ).size;
+      score += getDown(player, champ).size;
+    });
+
+    if (score > controversialScore) {
+      controversialScore = score;
+      mostControversial = champ;
+    }
+  });
+
+  document.getElementById("fun-content").innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+      <div>🎯 Joueur le plus ciblé : <b>${biggestVictim}</b> (${biggestVictimCount} bans)</div>
+      <div>👑 Joueur le plus gâté : <b>${mostLoved}</b> (${mostLovedVotes} recommandations)</div>
+      <div>💀 Joueur le plus détesté : <b>${mostHated}</b> (${mostHatedVotes} bans)</div>
+      <div>🔥 Champion le plus controversé : <b>${mostControversial}</b></div>
+    </div>
+  `;
 }
 </script>
 </body>
