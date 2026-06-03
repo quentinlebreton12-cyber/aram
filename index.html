@@ -369,7 +369,8 @@ body::before {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, push, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-
+let isAnalyzing = false; // Cette variable empêchera le lancement multiple
+  
 const firebaseConfig = {
   apiKey: "AIzaSyDndpGMcH8iXz7ytKpYWBHGy4nmxC0fChE",
   authDomain: "aram-22ce9.firebaseapp.com",
@@ -980,17 +981,17 @@ function addScreenshot(file) {
 
   
 async function processFile(scoreboardFile, damageFile) {
-  // 1. RÉCUPÉRATION DU BOUTON (CHANGE L'ID ICI !)
-  // Si ton bouton HTML s'appelle <button id="analyze-btn">, mets "analyze-btn" ici
-  const analyzeBtn = document.getElementById('id-de-ton-bouton-analyse'); 
-  
-  if (analyzeBtn) analyzeBtn.disabled = true; // Bloque le bouton
+  // Si une analyse tourne déjà, on sort immédiatement
+  if (isAnalyzing) {
+    console.log("Analyse déjà en cours ou en attente, on ne fait rien.");
+    return;
+  }
+
+  // On verrouille l'analyse
+  isAnalyzing = true;
 
   const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev/analyze";
-  
-  // Affiche l'état "Analyse en cours"
-  document.getElementById('analyze-result').innerHTML = 
-    '<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse en cours...</p></div>';
+  document.getElementById('analyze-result').innerHTML = '<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse en cours...</p></div>';
 
   try {
     const formData = new FormData();
@@ -999,42 +1000,32 @@ async function processFile(scoreboardFile, damageFile) {
 
     const res = await fetch(workerUrl, { method: 'POST', body: formData });
 
-    // Gestion du Quota (429)
     if (res.status === 429) {
-      throw new Error("Quota atteint : attends 30 secondes avant de relancer.");
+      throw new Error("Quota atteint : attends 30 secondes.");
     }
 
     const rawData = await res.json();
-    
     if (!res.ok || rawData.error) throw new Error(rawData.error || 'Erreur du Worker');
     
-    // Suite de ton code actuel :
+    // ... (ton code de filtrage des joueurs reste identique)
     const playersArray = Array.isArray(rawData) ? rawData : (rawData.players || []);
-    
     const filteredPlayers = playersArray.map(p => {
       const confirmedName = matchClubPlayer(p.name);
-      if (confirmedName) {
-        return { ...p, playerName: confirmedName };
-      }
-      return null;
+      return confirmedName ? { ...p, playerName: confirmedName } : null;
     }).filter(p => p !== null);
 
-    if(filteredPlayers.length === 0) {
-      throw new Error("Aucun joueur du club détecté.");
-    }
+    if(filteredPlayers.length === 0) throw new Error("Aucun joueur du club détecté.");
 
     showResult({ victory: true, players: filteredPlayers });
 
   } catch(err) {
     document.getElementById('analyze-result').innerHTML = '<div class="error-state">❌ ' + err.message + '</div>';
   } finally {
-    // 2. DÉBLOCAGE AUTOMATIQUE APRÈS 30 SECONDES
-    // Quoi qu'il arrive (succès ou erreur), le bouton se remet à 0 après 30s
-    if (analyzeBtn) {
-      setTimeout(() => {
-        analyzeBtn.disabled = false;
-      }, 30000); 
-    }
+    // ON NE DÉBLOQUE PAS TOUT DE SUITE
+    // On attend 30 secondes avant de remettre isAnalyzing à false
+    setTimeout(() => {
+      isAnalyzing = false;
+    }, 30000); // 30 secondes de sécurité pour le quota Gemini
   }
 }
   
