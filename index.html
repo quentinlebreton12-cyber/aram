@@ -283,12 +283,7 @@ body { font-family: system-ui, sans-serif; background: var(--bg-body); color: va
         </div>
       </div>
       <div class="screenshot-body">
-        <div class="worker-url-row" style="flex-direction:column;gap:4px">
-          <label for="worker-url">URL de ton Cloudflare Worker <span style="color:var(--text-very-light)">(à configurer une fois)</span></label>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="worker-url" placeholder="https://aram-stats.ton-pseudo.workers.dev" />
-            <button onclick="saveWorkerUrl()" style="padding:7px 12px;border:1px solid var(--border-input);border-radius:8px;background:transparent;cursor:pointer;font-size:12px;color:var(--text-body)">Sauvegarder</button>
-          </div>
+       
         </div>
         <div id="drop-area">
           <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
@@ -521,15 +516,7 @@ buildGrid();
 renderTeamComp();
 renderFunStats();
 
-// Restaurer l'URL du worker
-const savedUrl = localStorage.getItem('workerUrl');
-if (savedUrl) document.getElementById('worker-url').value = savedUrl;
 
-window.saveWorkerUrl = () => {
-  localStorage.setItem('workerUrl', document.getElementById('worker-url').value.trim());
-  const btn = event.target;
-  btn.textContent = '✓ Sauvegardé'; setTimeout(() => btn.textContent = 'Sauvegarder', 1500);
-};
 
 // Firebase sync
 onValue(ref(db,'votes'), (snap) => {
@@ -830,8 +817,8 @@ window.handleDrop     = (e) => { e.preventDefault(); document.getElementById('dr
 window.handleFile     = (e) => { if(e.target.files[0]) processFile(e.target.files[0]); };
 
 async function processFile(file) {
-  const workerUrl = document.getElementById('worker-url').value.trim();
-  if (!workerUrl) { document.getElementById('analyze-result').innerHTML='<div class="error-state">⚠️ Configure d\'abord l\'URL de ton Cloudflare Worker ci-dessus.</div>'; return; }
+  // Ton URL est maintenant gravée dans le marbre, invisible pour les utilisateurs
+  const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev";
 
   document.getElementById('analyze-result').innerHTML='<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse du screenshot en cours...</p></div>';
 
