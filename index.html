@@ -981,24 +981,24 @@ function addScreenshot(file) {
 
   
 async function processFile(scoreboardFile, damageFile) {
-  // Si une analyse tourne déjà, on sort immédiatement
-  if (isAnalyzing) {
-    console.log("Analyse déjà en cours ou en attente, on ne fait rien.");
-    return;
-  }
-
-  // On verrouille l'analyse
+  if (isAnalyzing) return;
   isAnalyzing = true;
 
-  const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev/analyze";
-  document.getElementById('analyze-result').innerHTML = '<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse en cours...</p></div>';
+  // AJOUT : Compression des images ici
+  const smallScoreboard = await resizeImage(scoreboardFile);
+  const smallDamage = await resizeImage(damageFile);
 
+  const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev/analyze";
+  
+  // ... reste de ta fonction ...
   try {
     const formData = new FormData();
-    formData.append("scoreboard", scoreboardFile);
-    formData.append("damage", damageFile);
+    // Utilise les images compressées (small) au lieu des originales
+    formData.append("scoreboard", smallScoreboard);
+    formData.append("damage", smallDamage);
 
     const res = await fetch(workerUrl, { method: 'POST', body: formData });
+    // ...
 
     if (res.status === 429) {
       throw new Error("Quota atteint : attends 30 secondes.");
