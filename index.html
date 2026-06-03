@@ -870,18 +870,18 @@ window.renderHistoryTab = async () => {
             </div>
             <div style="text-align:right; font-family:monospace;">
               <div>${p.kills}/${p.deaths}/${p.assists}</div>
-              <div style="color:var(--text-rec); font-size:12px;">${p.damage.toLocaleString()} pts</div>
+              <div style="color:var(--text-rec); font-size:12px;">${p.damage.toLocaleString()} dégâts</div>
             </div>
           </div>
         `;
       }).join('');
 
       details.innerHTML = `
-        <summary style="cursor:pointer; padding:12px; font-weight:bold; background:${game.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${game.victory ? 'var(--text-rec)' : 'var(--text-ban)'}; border-radius:8px;">
+        <summary style="cursor:pointer; padding:14px; font-weight:bold; background:${game.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${game.victory ? 'var(--text-rec)' : 'var(--text-ban)'}; border-radius:10px;">
           ${game.victory ? 'VICTOIRE' : 'DÉFAITE'}
           <span style="float:right; opacity:0.6; font-size:0.8em;">${new Date(game.timestamp).toLocaleDateString()}</span>
         </summary>
-        <div style="padding:10px;">${playersHtml}</div>
+        <div style="padding:12px;">${playersHtml}</div>
       `;
       container.appendChild(details);
     });
