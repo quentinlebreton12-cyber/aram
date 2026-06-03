@@ -6,6 +6,49 @@
 <title>ARAM Bans</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
+  /* --- ARRIÈRE-PLAN ARAM DISCRET --- */
+body {
+  position: relative; /* Nécessaire pour le pseudo-élément absolu */
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Image officielle de la map ARAM via Community Dragon */
+  background-image: url('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/content/src/leagueclient/createroom/map-howlingabyss-1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.05; /* Très léger, juste pour la texture */
+  pointer-events: none; /* Empêche l'image de bloquer les clics */
+  z-index: -1; /* Place l'image tout au fond */
+  transition: opacity 0.2s;
+}
+
+/* En mode sombre, on baisse encore un peu l'opacité pour que ça ne brille pas trop */
+[data-theme="dark"] body::before {
+  opacity: 0.02; 
+  filter: grayscale(30%); /* Assombrit légèrement l'ambiance */
+}
+  /* --- CORRECTION LISIBILITÉ BANNIÈRES JOUEURS --- */
+.player-header .player-name {
+  color: #1a1a1a !important; 
+}
+.player-header .player-pseudo {
+  color: #555 !important;
+}
+.player-header .player-stats {
+  color: #444 !important;
+}
+.player-header .player-stats .stat-rec, 
+.player-header .player-stats .stat-ban {
+  color: inherit !important;
+  font-weight: 500;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg-body: #f4f3ef; --text-body: #1a1a1a; --bg-card: #fff;
