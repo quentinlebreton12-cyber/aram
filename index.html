@@ -369,6 +369,10 @@ body::before {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+// Si tu es en ES6
+import { get, ref } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+
+  
 const firebaseConfig = {
   apiKey: "AIzaSyDndpGMcH8iXz7ytKpYWBHGy4nmxC0fChE",
   authDomain: "aram-22ce9.firebaseapp.com",
@@ -835,22 +839,26 @@ window.renderStatsTab = function() {
   });
 };
 
-window.renderHistoryTab = () => {
+window.renderHistoryTab = async () => {
   const container = document.getElementById('history-list');
-  container.innerHTML = '<p style="text-align:center;">Chargement de l\'historique...</p>';
+  container.innerHTML = '<p style="text-align:center;">Chargement en cours...</p>';
 
-  // On accède directement à la référence 'games' via la variable 'db' déjà définie dans ton code
-  const gamesRef = window.ref(window.db, 'games'); // Utilise window.ref et window.db si définis globalement
-  
-  window.onValue(gamesRef, (snapshot) => {
-    const data = snapshot.val();
+  try {
+    // 1. On accède à la base de données
+    const dbRef = window.ref(window.db, 'games');
     
-    if (!data) {
-      container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Aucune partie enregistrée.</p>';
+    // 2. On récupère les données UNE FOIS
+    const snapshot = await window.get(dbRef);
+    
+    if (!snapshot.exists()) {
+      container.innerHTML = '<p style="text-align:center;">Aucune partie trouvée.</p>';
       return;
     }
 
-    container.innerHTML = ''; // Nettoyage
+    const data = snapshot.val();
+    container.innerHTML = ''; // Vide le message de chargement
+    
+    // 3. On affiche les données
     const games = Object.values(data).reverse();
 
     games.forEach((game) => {
@@ -871,7 +879,7 @@ window.renderHistoryTab = () => {
       summary.style.color = game.victory ? "var(--text-rec)" : "var(--text-ban)";
       summary.innerHTML = `
         <span>${game.victory ? '✅ VICTOIRE' : '❌ DÉFAITE'}</span>
-        <span style="font-size: 0.8em; opacity: 0.7;">${new Date(game.timestamp || Date.now()).toLocaleDateString()}</span>
+        <span style="font-size: 0.8em; opacity: 0.7;">${game.timestamp ? new Date(game.timestamp).toLocaleDateString() : ''}</span>
       `;
       
       const content = document.createElement('div');
@@ -897,9 +905,10 @@ window.renderHistoryTab = () => {
       details.appendChild(content);
       container.appendChild(details);
     });
-  }, (error) => {
-    container.innerHTML = '<p style="text-align:center; color:red;">Erreur : ' + error.message + '</p>';
-  });
+  } catch (err) {
+    console.error("Erreur historique:", err);
+    container.innerHTML = '<p style="text-align:center; color:red;">Erreur : ' + err.message + '</p>';
+  }
 };
 
 window.handleDragOver = (e) => { e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); };
