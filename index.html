@@ -295,7 +295,7 @@ body::before {
         <div id="drop-area">
           <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
             <i class="ti ti-screenshot" style="font-size:32px;margin-bottom:8px;display:block;color:var(--text-light)"></i>
-            <p>Dépose ton screenshot ici</p>
+            <p>Dépose ton screenshot ici ou fais <strong>Ctrl + V</strong></p>
             <small style="color:var(--text-very-light)">ou clique pour parcourir</small>
           </div>
           <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
@@ -345,7 +345,7 @@ const champKey = {
   "Aurelion Sol":"AurelionSol","Bel'Veth":"Belveth","Cho'Gath":"Chogath",
   "Dr. Mundo":"DrMundo","Jarvan IV":"JarvanIV","Kai'Sa":"Kaisa",
   "Kha'Zix":"Khazix","Kog'Maw":"KogMaw","LeBlanc":"Leblanc",
-  "Lee Sin":"LeeSin","Master Yi":"MasterYi","Miss Fortune":"MissFortune",
+  "Lee Sin":"LeeSim","Master Yi":"MasterYi","Miss Fortune":"MissFortune",
   "Nunu & Willump":"Nunu","Rek'Sai":"RekSai","Renata Glasc":"Renata",
   "Tahm Kench":"TahmKench","Twisted Fate":"TwistedFate","Vel'Koz":"Velkoz",
   "Xin Zhao":"XinZhao","K'Sante":"KSante","Wukong":"MonkeyKing"
@@ -813,6 +813,18 @@ window.handleDragOver = (e) => { e.preventDefault(); document.getElementById('dr
 window.handleDragLeave= ()  => { document.getElementById('drop-zone').classList.remove('dragover'); };
 window.handleDrop     = (e) => { e.preventDefault(); document.getElementById('drop-zone').classList.remove('dragover'); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); };
 window.handleFile     = (e) => { if(e.target.files[0]) processFile(e.target.files[0]); };
+
+// == LOGIQUE DE CAPTURE PAR COPIER-COLLER (CTRL + V) ==
+document.addEventListener('paste', (e) => {
+  const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const file = items[i].getAsFile();
+      processFile(file);
+      break;
+    }
+  }
+});
 
 // FUZZY MATCHING : Plus robuste pour identifier le bon joueur malgré d'éventuelles erreurs de lecture OCR
 function matchClubPlayer(detectedName) {
