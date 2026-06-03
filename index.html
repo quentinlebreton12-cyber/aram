@@ -835,14 +835,14 @@ window.renderStatsTab = function() {
   });
 };
 
-window.renderHistoryTab = async () => {
+window.renderHistoryTab = () => {
   const container = document.getElementById('history-list');
   container.innerHTML = '<p style="text-align:center;">Chargement de l\'historique...</p>';
 
-  try {
-    // On va chercher les données directement dans ta base Firebase
-    // Remplace 'games' par le nom du chemin de ta base de données si c'est différent
-    const snapshot = await get(ref(db, 'games')); 
+  // On accède directement à la référence 'games' via la variable 'db' déjà définie dans ton code
+  const gamesRef = window.ref(window.db, 'games'); // Utilise window.ref et window.db si définis globalement
+  
+  window.onValue(gamesRef, (snapshot) => {
     const data = snapshot.val();
     
     if (!data) {
@@ -877,13 +877,9 @@ window.renderHistoryTab = async () => {
       const content = document.createElement('div');
       content.style.padding = "10px";
       
-      let tableHtml = `
-        <table style="width:100%; border-collapse:collapse; font-size: 0.9em;">
-          <thead>
-            <tr style="color:var(--text-muted);"><th style="text-align:left; padding:5px;">Joueur</th><th style="text-align:center; padding:5px;">K/D/A</th><th style="text-align:right; padding:5px;">Dégâts</th></tr>
-          </thead>
-          <tbody>
-      `;
+      let tableHtml = `<table style="width:100%; border-collapse:collapse; font-size: 0.9em;">
+        <thead><tr style="color:var(--text-muted);"><th style="text-align:left; padding:5px;">Joueur</th><th style="text-align:center; padding:5px;">K/D/A</th><th style="text-align:right; padding:5px;">Dégâts</th></tr></thead>
+        <tbody>`;
 
       (game.players || []).forEach(p => {
         tableHtml += `
@@ -901,9 +897,9 @@ window.renderHistoryTab = async () => {
       details.appendChild(content);
       container.appendChild(details);
     });
-  } catch (err) {
-    container.innerHTML = '<p style="text-align:center; color:red;">Erreur de chargement : ' + err.message + '</p>';
-  }
+  }, (error) => {
+    container.innerHTML = '<p style="text-align:center; color:red;">Erreur : ' + error.message + '</p>';
+  });
 };
 
 window.handleDragOver = (e) => { e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); };
