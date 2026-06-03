@@ -6,6 +6,8 @@
 <title>ARAM Club</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
+  
+
 /* --- CONFIGURATION DES THEMES ET TEXTURES --- */
 :root {
   --bg-body: #f4f3ef; --text-body: #1a1a1a; --bg-card: #ffffff;
@@ -241,6 +243,13 @@ body::before {
 .cancel-btn:hover { background: var(--cancel-btn-hover); color: var(--text-body); }
 
 .footer { text-align: center; font-size: 11px; color: var(--text-very-light); padding: 1.5rem 0 0.5rem; }
+
+  /* Ajout pour forcer le dark mode sur les containers */
+[data-theme="dark"] .player-card,
+[data-theme="dark"] .screenshot-section {
+    background: #1f232b !important;
+    border: 1px solid #2d323f !important;
+}
 </style>
 </head>
 <body>
@@ -412,6 +421,38 @@ const avatarSVGs = {
   Vincent: `<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="18" fill="#1A3A1A"/><path d="M14,8 l0,8 l-4,8 h16 l-4,-8 l0,-8z" fill="#7FFF00" opacity="0.7" stroke="#333" stroke-width="0.8"/><path d="M14,16 l-4,8 h16 l-4,-8z" fill="#00FF7F" opacity="0.5"/><circle cx="16" cy="22" r="1.5" fill="white" opacity="0.8"/><circle cx="20" cy="25" r="1" fill="white" opacity="0.6"/><circle cx="18" cy="20" r="1" fill="white" opacity="0.7"/><rect x="15" y="6" width="6" height="3" rx="1" fill="#8B4513"/><polygon points="28,4 24,10 32,10" fill="#4A0080" stroke="#9B59B6" stroke-width="0.8"/><text x="26" y="9" font-size="4" fill="white" font-weight="bold">20</text><ellipse cx="15" cy="14" rx="2.5" ry="2" fill="none" stroke="#333" stroke-width="1"/><ellipse cx="21" cy="14" rx="2.5" ry="2" fill="none" stroke="#333" stroke-width="1"/><line x1="17.5" y1="14" x2="18.5" y2="14" stroke="#333" stroke-width="1"/></svg>`
 };
 
+let screenQueue = [];
+
+// Fonction pour gérer l'upload (via clic ou drag&drop)
+window.handleFile = (event) => {
+  const file = event.target.files[0];
+  processScreenshots(file);
+};
+
+window.handleDrop = (event) => {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  processScreenshots(file);
+};
+
+// Pas besoin de changer ton handleDragOver, il est déjà là
+window.handleDragOver = (e) => e.preventDefault();
+window.handleDragLeave = (e) => e.preventDefault();
+
+function processScreenshots(file) {
+  if (!file) return;
+  screenQueue.push(file);
+  
+  if (screenQueue.length === 1) {
+    alert("Premier screenshot reçu. Envoie le deuxième.");
+  } else {
+    alert("Analyse des 2 screenshots lancée !");
+    // APPELLE TA FONCTION D'ANALYSE ICI
+    // runYourOCRFunction(screenQueue[0], screenQueue[1]);
+    screenQueue = []; // Reset
+  }
+}
+  
 const playerColors = {
   Manu:    { bg:"rgba(255,249,196,0.15)", border:"#F9A825" },
   Arthur:  { bg:"rgba(187,222,251,0.15)", border:"#1565C0" },
@@ -967,6 +1008,32 @@ window.addEventListener('paste', (e) => {
     }
   }
 });
+  window.renderHistoryTab = () => {
+  const container = document.getElementById('history-list');
+  container.innerHTML = '';
+  
+  // Supposons que tu aies un objet 'gameStats' ou équivalent
+  // Si tu n'as pas de variable 'gameStats', il faut récupérer les données de Firebase ici
+  // Exemple rapide avec une boucle si tu as tes données :
+  
+  Object.entries(window.gameStats || {}).reverse().forEach(([id, game]) => {
+    const details = document.createElement('details');
+    details.style.marginBottom = "10px";
+    details.style.border = "1px solid var(--border-color)";
+    details.style.borderRadius = "8px";
+    details.style.backgroundColor = "var(--bg-card)";
+    
+    details.innerHTML = `
+      <summary style="cursor:pointer; padding:10px; font-weight:bold; color:${game.victory ? 'var(--text-rec)' : 'var(--text-ban)'};">
+        ${game.victory ? '✅ VICTOIRE' : '❌ DÉFAITE'}
+      </summary>
+      <div style="padding:15px; border-top:1px solid var(--border-color);">
+        <p>Date : ${new Date(game.timestamp).toLocaleDateString()}</p>
+        </div>
+    `;
+    container.appendChild(details);
+  });
+};
 </script>
 </body>
 </html>
