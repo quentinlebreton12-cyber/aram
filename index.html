@@ -767,8 +767,8 @@ function renderFunStats() {
 
   const rows=[
     {emoji:'🎯',text:'Plus ciblé',value:biggestVictim&&biggestVictimBans>0?biggestVictim+' ('+biggestVictimBans+' bans)':null},
-    {emoji:'👑',text:'Plus gâté',value:mostGateau&&mostGateauRecs>0?mostGateau+' ('+mostGateauRecs+' recs)':null},
-    {emoji:'🏆',text:'Meilleur winrate',value:mostWinPlayer?mostWinPlayer+' ('+Math.round(mostWinRate*100)+'% sur '+playerGames[mostWinPlayer]+' g)':null},
+    {emoji:'👑',text:'Plus gâté',value:mostGateau&&mostGateauRecs>0?mostGateau+' ('+mostGateauRecs+' recos)':null},
+    {emoji:'🏆',text:'Meilleur winrate',value:mostWinPlayer?mostWinPlayer+' ('+Math.round(mostWinRate*100)+'% sur '+playerGames[mostWinPlayer]+' partie)':null},
     {emoji:'🔥',text:'Disputé',value:mostControversialChamp&&controversialScore>0?mostControversialChamp:null},
     {emoji:'📊',text:'Le favori',value:mostPlayedChamp&&mostPlayedCount>0?mostPlayedChamp+' ('+mostPlayedCount+' parties)':null},
   ];
@@ -1082,32 +1082,7 @@ window.addEventListener('paste', (e) => {
   }
 });
   
-  window.renderHistoryTab = () => {
-  const container = document.getElementById('history-list');
-  container.innerHTML = '';
-  
-  // Supposons que tu aies un objet 'gameStats' ou équivalent
-  // Si tu n'as pas de variable 'gameStats', il faut récupérer les données de Firebase ici
-  // Exemple rapide avec une boucle si tu as tes données :
-  
-  Object.entries(window.gameStats || {}).reverse().forEach(([id, game]) => {
-    const details = document.createElement('details');
-    details.style.marginBottom = "10px";
-    details.style.border = "1px solid var(--border-color)";
-    details.style.borderRadius = "8px";
-    details.style.backgroundColor = "var(--bg-card)";
-    
-    details.innerHTML = `
-      <summary style="cursor:pointer; padding:10px; font-weight:bold; color:${game.victory ? 'var(--text-rec)' : 'var(--text-ban)'};">
-        ${game.victory ? '✅ VICTOIRE' : '❌ DÉFAITE'}
-      </summary>
-      <div style="padding:15px; border-top:1px solid var(--border-color);">
-        <p>Date : ${new Date(game.timestamp).toLocaleDateString()}</p>
-        </div>
-    `;
-    container.appendChild(details);
-  });
-};
+
 </script>
 </body>
 </html>
