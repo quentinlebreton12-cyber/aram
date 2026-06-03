@@ -980,19 +980,30 @@ function addScreenshot(file) {
 
   
 async function processFile(scoreboardFile, damageFile) {
+  // 1. Récupération du bouton pour bloquer le spam (Remplace par ton vrai ID)
+  const analyzeBtn = document.getElementById('id-de-ton-bouton-analyse'); 
+  if (analyzeBtn) analyzeBtn.disabled = true;
+
   const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev/analyze";
-  document.getElementById('analyze-result').innerHTML='<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse et filtrage en cours...</p></div>';
+  document.getElementById('analyze-result').innerHTML = '<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse et filtrage en cours...</p></div>';
 
   try {
     const formData = new FormData();
-    // On envoie les DEUX fichiers au worker
     formData.append("scoreboard", scoreboardFile);
     formData.append("damage", damageFile);
 
     const res = await fetch(workerUrl, { method: 'POST', body: formData });
+
+    // 2. Gestion spécifique de l'erreur 429 (Quota dépassé)
+    if (res.status === 429) {
+      throw new Error("Quota atteint : attends 10 secondes avant de relancer.");
+    }
+
     const rawData = await res.json();
     
-    if (!res.ok || rawData.error) throw new Error(rawData.error || 'Erreur du Worker');
+    if (!res.ok || rawData.error) {
+      throw new Error(rawData.error || 'Erreur du Worker');
+    }
     
     const playersArray = Array.isArray(rawData) ? rawData : (rawData.players || []);
     
@@ -1016,10 +1027,16 @@ async function processFile(scoreboardFile, damageFile) {
     showResult(compatibleData);
 
   } catch(err) {
-    document.getElementById('analyze-result').innerHTML='<div class="error-state">❌ ' + err.message + '</div>';
+    document.getElementById('analyze-result').innerHTML = '<div class="error-state">❌ ' + err.message + '</div>';
+  } finally {
+    // 3. Déblocage du bouton après 10 secondes d'attente (indépendamment du succès ou de l'erreur)
+    if (analyzeBtn) {
+      setTimeout(() => {
+        analyzeBtn.disabled = false;
+      }, 10000); // 10 secondes
+    }
   }
 }
-
 let pendingResult=null;
 function showResult(data) {
   pendingResult=data;
