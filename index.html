@@ -817,7 +817,7 @@ window.handleDrop     = (e) => { e.preventDefault(); document.getElementById('dr
 window.handleFile     = (e) => { if(e.target.files[0]) processFile(e.target.files[0]); };
 
 async function processFile(file) {
-  // Ton URL est maintenant gravée dans le marbre, invisible pour les utilisateurs
+  // Ton URL est maintenant gravée ici, totalement invisible pour tes potes !
   const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev";
 
   document.getElementById('analyze-result').innerHTML='<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse du screenshot en cours...</p></div>';
@@ -827,13 +827,23 @@ async function processFile(file) {
     const b64=e.target.result.split(',')[1];
     const mediaType=file.type||'image/png';
     try {
-      const res=await fetch(workerUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:b64,mediaType})});
-      if(!res.ok) throw new Error('Worker error '+res.status);
+      const res=await fetch(workerUrl,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({imageBase64:b64,mediaType})
+      });
+      
+      // On extrait d'abord le JSON pour pouvoir lire le message d'erreur potentiel
       const data=await res.json();
-      if(data.error) throw new Error(data.error);
+      
+      // Si le statut HTTP est mauvais (ex: 400) ou si le JSON contient un message d'erreur
+      if(!res.ok || data.error) {
+        throw new Error(data.error || 'Erreur du Worker (' + res.status + ')');
+      }
+      
       showResult(data);
     } catch(err) {
-      document.getElementById('analyze-result').innerHTML='<div class="error-state">❌ Erreur : '+err.message+'<br><small>Vérifie que le Worker est bien déployé et que la clé API est correcte.</small></div>';
+      document.getElementById('analyze-result').innerHTML='<div class="error-state">❌ ' + err.message + '</div>';
     }
   };
   reader.readAsDataURL(file);
