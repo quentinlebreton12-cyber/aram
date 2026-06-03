@@ -949,7 +949,9 @@ async function processFile(scoreboardFile, damageFile) {
 
   try {
     const formData = new FormData();
-    formData.append("image", file);
+    // On envoie les DEUX fichiers au worker
+    formData.append("scoreboard", scoreboardFile);
+    formData.append("damage", damageFile);
 
     const res = await fetch(workerUrl, { method: 'POST', body: formData });
     const rawData = await res.json();
@@ -1054,6 +1056,9 @@ window.updatePendingChamp = (index, newChampName) => {
 
 window.resetScreenshot=()=>{
   pendingResult=null;
+  // On réinitialise la mémoire pour la prochaine partie
+  gameScreenshots.scoreboard = null;
+  gameScreenshots.damageGraph = null;
   document.getElementById('analyze-result').innerHTML='';
   document.getElementById('file-input').value='';
 };
@@ -1066,16 +1071,17 @@ window.confirmSave=async()=>{
   setTimeout(() => { window.resetScreenshot(); window.switchTab('history'); }, 1500);
 };
 
-// Prise en charge du CTRL+V pour coller directement un screenshot
+// Prise en charge du CTRL+V pour coller séquentiellement les screenshots
 window.addEventListener('paste', (e) => {
   if (e.clipboardData && e.clipboardData.files.length > 0) {
     const file = e.clipboardData.files[0];
     if (file.type.startsWith('image/')) {
       window.switchTab('screenshot');
-      processFile(file);
+      addScreenshot(file); // C'est ici qu'il faut appeler addScreenshot, et pas processFile !
     }
   }
 });
+  
   window.renderHistoryTab = () => {
   const container = document.getElementById('history-list');
   container.innerHTML = '';
