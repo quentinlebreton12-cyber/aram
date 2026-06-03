@@ -164,6 +164,36 @@ body::before {
 .voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; color: var(--text-body); display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 6px; }
 
 .footer { text-align: center; font-size: 11px; color: var(--text-very-light); padding: 1.5rem 0 0.5rem; }
+/* --- CORRECTION ULTRA-COMPACTE SANS TOUCHER AU HTML --- */
+
+/* On transforme la liste verticale en une grille de plusieurs colonnes */
+.champ-list {
+  display: grid !important;
+  /* Crée automatiquement autant de colonnes de 230px que possible en largeur */
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+  gap: 6px !important;
+  max-height: none !important; /* Plus besoin de scroll interne */
+  overflow-y: visible !important;
+  padding: 10px 0 !important;
+}
+
+/* On transforme les grandes rangées en petits badges élégants */
+.champ-list > * {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  margin: 0 !important; /* Supprime les anciens espacements verticaux */
+  box-sizing: border-box !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Optionnel : Un petit effet au survol pour que ce soit propre */
+.champ-list > *:hover {
+  filter: brightness(1.2);
+}
+  
 </style>
 </head>
 <body>
