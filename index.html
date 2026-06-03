@@ -388,9 +388,49 @@ onValue(ref(db,'votes'), (snap) => {
 onValue(ref(db,'games'), (snap) => {
   gameStats = snap.val() || {};
   if (document.getElementById('tab-stats').classList.contains('active')) renderStatsTab();
-  if (document.getElementById('tab-history').classList.contains('active')) renderHistoryTab();
   renderTeamComp(); renderFunStats();
+  renderHistoryList(); // Force la mise à jour de l'historique visuel
 });
+
+// CORRECTION : Fonctions de gestion et suppression de l'historique
+window.renderHistoryList = () => {
+  const listEl = document.getElementById('history-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  const entries = Object.entries(gameStats);
+  
+  if (entries.length === 0) {
+    listEl.innerHTML = '<div style="font-size: 12px; color: var(--text-very-light); font-style: italic;">Aucune partie dans l\'historique.</div>';
+    return;
+  }
+  
+  // Tri de la plus récente à la plus ancienne
+  entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+  
+  entries.forEach(([id, game]) => {
+    const row = document.createElement('div');
+    row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px;";
+    
+    const dateStr = game.timestamp ? new Date(game.timestamp).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : 'Date inconnue';
+    const statusText = game.victory ? '<span style="color:var(--text-rec); font-weight:bold;">🏆 Victoire</span>' : '<span style="color:var(--text-ban); font-weight:bold;">💀 Défaite</span>';
+    const compositions = game.players ? game.players.map(p => p.champion || '?').join(', ') : 'Données incomplètes';
+    
+    row.innerHTML = `
+      <div style="min-width: 0; flex: 1; padding-right: 8px;">
+        <div>${statusText} — <span style="color:var(--text-muted);">${dateStr}</span></div>
+        <div style="font-size: 10px; color: var(--text-very-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">${compositions}</div>
+      </div>
+      <button onclick="deleteGame('${id}')" style="background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px;" title="Supprimer la partie">🗑️</button>
+    `;
+    listEl.appendChild(row);
+  });
+};
+
+window.deleteGame = async (id) => {
+  if (confirm("Es-tu sûr de vouloir supprimer définitivement cette partie de l'historique ? Cela mettra à jour les stats instantanément.")) {
+    await set(ref(db, 'games/' + id), null); // Supprime proprement l'élément de Firebase
+  }
+};
 
 function updateCardHeadersColors() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
