@@ -108,8 +108,6 @@ body { font-family: system-ui, sans-serif; background: var(--bg-body); color: va
 .voter-list { display: flex; flex-direction: column; gap: 6px; }
 .voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.1s; color: var(--text-body); }
 .voter-btn:hover { background: var(--row-hover); }
-
-/* NOUVEAU STYLE POUR ANNULER UN VOTE */
 .voter-btn.already-voted { border-color: var(--text-ban); color: var(--text-ban); background: var(--bg-ban); display: flex; justify-content: space-between; align-items: center; }
 .voter-btn.already-voted:hover { background: var(--bg-ban-hover); }
 
@@ -267,7 +265,6 @@ function openPicker(type, target, champ) {
     const already = voters.has(voter);
     const btn = document.createElement('button');
     
-    // NOUVELLE LOGIQUE POUR L'AFFICHAGE DU BOUTON
     if (already) {
       btn.className = 'voter-btn already-voted';
       btn.innerHTML = `<span>${voter}</span> <i class="ti ti-x"></i>`;
@@ -302,7 +299,6 @@ window.castVote = function(voter) {
   });
 };
 
-// NOUVELLE FONCTION POUR SUPPRIMER UN VOTE
 window.removeVote = function(voter) {
   const type = pendingVote.type;
   const target = pendingVote.target;
@@ -311,7 +307,6 @@ window.removeVote = function(voter) {
   const basePath = type === 'up' ? 'upVotes' : 'downVotes';
   const voteRef = ref(db, `votes/${basePath}/${target}/${champ}/${voter}`);
   
-  // En envoyant "null", Firebase supprime la donnée !
   set(voteRef, null).then(() => {
     window.closePicker();
   });
@@ -321,14 +316,28 @@ function renderPlayer(player) {
   const search = searches[player].toLowerCase();
   let filtered = champions.filter(function(c) { return c.toLowerCase().indexOf(search) !== -1; });
   
-  // TRI PAR NOMBRE DE VOTES
+  // TRI MIS A JOUR : Banni > Recommandé > Nb de votes > Alphabétique
   filtered.sort(function(a, b) {
+    // 1. Les Bannis en premier
+    const bannedA = isBanned(player, a);
+    const bannedB = isBanned(player, b);
+    if (bannedA && !bannedB) return -1;
+    if (!bannedA && bannedB) return 1;
+
+    // 2. Les Recommandés en deuxième
+    const recA = isRec(player, a);
+    const recB = isRec(player, b);
+    if (recA && !recB) return -1;
+    if (!recA && recB) return 1;
+
+    // 3. Tri par nombre total de votes (up + down)
     const votesA = getUp(player, a).size + getDown(player, a).size;
     const votesB = getUp(player, b).size + getDown(player, b).size;
-    
     if (votesA !== votesB) {
       return votesB - votesA;
     }
+    
+    // 4. Par défaut, ordre alphabétique
     return a.localeCompare(b);
   });
 
