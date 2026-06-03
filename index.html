@@ -23,7 +23,7 @@ body::before {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.05; /* Très léger, juste pour la texture */
+  opacity: 0.15; /* Très léger, juste pour la texture */
   pointer-events: none; /* Empêche l'image de bloquer les clics */
   z-index: -1; /* Place l'image tout au fond */
   transition: opacity 0.2s;
@@ -31,7 +31,7 @@ body::before {
 
 /* En mode sombre, on baisse encore un peu l'opacité pour que ça ne brille pas trop */
 [data-theme="dark"] body::before {
-  opacity: 0.02; 
+  opacity: 0.05; 
   filter: grayscale(30%); /* Assombrit légèrement l'ambiance */
 }
   /* --- CORRECTION LISIBILITÉ BANNIÈRES JOUEURS --- */
