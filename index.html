@@ -56,10 +56,10 @@ body::before {
 .theme-toggle { background: transparent; border: 1px solid var(--border-input); padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--text-body); display: flex; align-items: center; gap: 6px; font-size: 12px; transition: all 0.1s; }
 .theme-toggle:hover { background: var(--row-hover); }
 
-/* GRILLE DES JOUEURS */
+/* GRILLE DES JOUEURS OPTIMISÉE ET PLUS SERRÉE */
 .players-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -95,13 +95,13 @@ body::before {
 .player-pseudo { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 1px; }
 
 .search-bar { position: relative; padding: 6px 10px; }
-.search-bar input { width: 100%; padding: 6px 8px 6px 28px; font-size: 12px; border: 1px solid var(--border-input); border-radius: 8px; background: var(--bg-input); color: var(--text-body); outline: none; }
-.search-bar i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-very-light); }
+.search-bar select { width: 100%; padding: 6px 8px 6px 28px; font-size: 12px; border: 1px solid var(--border-input); border-radius: 8px; background: var(--bg-input); color: var(--text-body); outline: none; cursor: pointer; }
+.search-bar i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-very-light); pointer-events: none; }
 
-/* GRILLE COMPACTE DES CHAMPIONS */
+/* GRILLE EN UNIQUE COLONNE COMPACTE POUR LE TOP 10 */
 .champ-list {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+  grid-template-columns: 1fr !important;
   gap: 6px !important;
   max-height: none !important;
   overflow-y: visible !important;
@@ -218,7 +218,12 @@ body::before {
 .stats-winrate.mid  { background: var(--bg-input); color: var(--text-muted); }
 .stats-dmg { color: var(--text-light); font-size: 11px; min-width: 55px; text-align: right; }
 
-/* PICKER OVERLAY & STYLES MANQUANTS */
+/* GESTION ACCORDÉONS/CHEVRONS DE L'HISTORIQUE */
+summary::-webkit-details-marker { display: none; }
+summary { list-style: none; }
+details[open] summary i.ti-chevron-down { transform: rotate(180deg); }
+
+/* PICKER OVERLAY & STYLES */
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
 .picker { background: var(--picker-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.25rem; width: 300px; box-shadow: var(--card-shadow); }
 .voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; color: var(--text-body); display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 6px; transition: all 0.1s; }
@@ -295,7 +300,7 @@ body::before {
         <div id="drop-area">
           <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
             <i class="ti ti-screenshot" style="font-size:32px;margin-bottom:8px;display:block;color:var(--text-light)"></i>
-            <p>Dépose ton screenshot ici ou fais <strong>Ctrl + V</strong></p>
+            <p>Dépose ton screenshot ici</p>
             <small style="color:var(--text-very-light)">ou clique pour parcourir</small>
           </div>
           <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
@@ -345,7 +350,7 @@ const champKey = {
   "Aurelion Sol":"AurelionSol","Bel'Veth":"Belveth","Cho'Gath":"Chogath",
   "Dr. Mundo":"DrMundo","Jarvan IV":"JarvanIV","Kai'Sa":"Kaisa",
   "Kha'Zix":"Khazix","Kog'Maw":"KogMaw","LeBlanc":"Leblanc",
-  "Lee Sin":"LeeSim","Master Yi":"MasterYi","Miss Fortune":"MissFortune",
+  "Lee Sin":"LeeSin","Master Yi":"MasterYi","Miss Fortune":"MissFortune",
   "Nunu & Willump":"Nunu","Rek'Sai":"RekSai","Renata Glasc":"Renata",
   "Tahm Kench":"TahmKench","Twisted Fate":"TwistedFate","Vel'Koz":"Velkoz",
   "Xin Zhao":"XinZhao","K'Sante":"KSante","Wukong":"MonkeyKing"
@@ -421,8 +426,7 @@ const championRoles = {
 };
 
 let upVotes={}, downVotes={}, gameStats={};
-const searches={};
-players.forEach(p => { upVotes[p]={}; downVotes[p]={}; searches[p]=""; });
+players.forEach(p => { upVotes[p]={}; downVotes[p]={}; });
 
 let pendingVote=null;
 const getUp   = (t,c) => (upVotes[t]   && upVotes[t][c])   ? upVotes[t][c]   : new Set();
@@ -450,7 +454,7 @@ onValue(ref(db,'games'), (snap) => {
   renderHistoryList(); 
 });
 
-// CORRECTION ID UNIQUE : Cible désormais correctement la zone de l'onglet Importation
+/* ACCORDÉON : HISTORIQUE DE LA ZONE SCREENSHOT */
 window.renderHistoryList = () => {
   const listEl = document.getElementById('screenshot-history-list');
   if (!listEl) return;
@@ -465,21 +469,39 @@ window.renderHistoryList = () => {
   entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
   
   entries.forEach(([id, game]) => {
-    const row = document.createElement('div');
-    row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px;";
+    const detailsEl = document.createElement('details');
+    detailsEl.style.cssText = "background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px; overflow:hidden; margin-bottom:6px;";
     
     const dateStr = game.timestamp ? new Date(game.timestamp).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : 'Date inconnue';
     const statusText = game.victory ? '<span style="color:var(--text-rec); font-weight:bold;">🏆 Victoire</span>' : '<span style="color:var(--text-ban); font-weight:bold;">💀 Défaite</span>';
     const compositions = game.players ? game.players.map(p => p.champion || '?').join(', ') : 'Données incomplètes';
     
-    row.innerHTML = `
+    let summaryHtml = `<summary style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor:pointer; list-style:none; user-select:none;">
       <div style="min-width: 0; flex: 1; padding-right: 8px;">
         <div>${statusText} — <span style="color:var(--text-muted);">${dateStr}</span></div>
-        <div style="font-size: 10px; color: var(--text-very-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">${compositions}</div>
       </div>
-      <button onclick="deleteGame('${id}')" style="background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px;" title="Supprimer la partie">🗑️</button>
-    `;
-    listEl.appendChild(row);
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button onclick="event.stopPropagation(); event.preventDefault(); deleteGame('${id}')" style="background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px;" title="Supprimer la partie">🗑️</button>
+        <i class="ti ti-chevron-down" style="font-size:12px; color:var(--text-light)"></i>
+      </div>
+    </summary>`;
+    
+    let bodyHtml = `<div style="padding: 8px 12px; border-top:1px solid var(--border-color); background:rgba(0,0,0,0.02); font-size:11px; color:var(--text-muted);">`;
+    if (game.players) {
+      game.players.forEach(p => {
+        const kda = `${p.kills}/${p.deaths||0}/${p.assists}`;
+        bodyHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="font-weight:600; color:var(--text-body);">${p.playerName}</span>
+          <span>${p.champion || '?'} (${kda})</span>
+        </div>`;
+      });
+    } else {
+      bodyHtml += `<div>${compositions}</div>`;
+    }
+    bodyHtml += `</div>`;
+    
+    detailsEl.innerHTML = summaryHtml + bodyHtml;
+    listEl.appendChild(detailsEl);
   });
 };
 
@@ -500,6 +522,35 @@ function updateCardHeadersColors() {
     }
   });
 }
+
+/* WIZARD DE SELECTION DE VOTE VIA DROPDOWN COMPACT */
+window.openDropdownPicker = (target, champ) => {
+  if (!champ) return;
+  pendingVote = { target, champ };
+  document.getElementById('picker-title').textContent = 'Voter pour ' + champ + ' (' + target + ')';
+  document.getElementById('picker-sub').textContent = 'Sélectionnez le type d\'action à appliquer :';
+  const list = document.getElementById('voter-list');
+  list.innerHTML = '';
+  
+  const btnUp = document.createElement('button');
+  btnUp.className = 'voter-btn';
+  btnUp.innerHTML = '👍 Recommander / Gérer la recommandation';
+  btnUp.onclick = () => window.openPickerFromDropdown('up');
+  
+  const btnDown = document.createElement('button');
+  btnDown.className = 'voter-btn';
+  btnDown.innerHTML = '👎 Bannir / Gérer le ban';
+  btnDown.onclick = () => window.openPickerFromDropdown('down');
+  
+  list.appendChild(btnUp);
+  list.appendChild(btnDown);
+  document.getElementById('overlay').style.display = 'flex';
+};
+
+window.openPickerFromDropdown = (type) => {
+  const { target, champ } = pendingVote;
+  openPicker(type, target, champ);
+};
 
 function openPicker(type, target, champ) {
   if (type==='up'   && isRec(target,champ))    return;
@@ -542,15 +593,13 @@ window.removeVote  = (voter) => { const {type,target,champ}=pendingVote; set(ref
 function renderPlayer(player) {
   const card = document.getElementById('card-'+player);
   if (!card) return;
-  const search = searches[player].toLowerCase();
   
+  // On récupère uniquement les champions qui possèdent un vote ou un statut
   let filtered = champions.filter(c => {
-    if (!search) {
-      return isRec(player, c) || isBanned(player, c) || getUp(player, c).size > 0 || getDown(player, c).size > 0;
-    }
-    return c.toLowerCase().includes(search);
+    return isRec(player, c) || isBanned(player, c) || getUp(player, c).size > 0 || getDown(player, c).size > 0;
   });
 
+  // Tri : bans d'abord, recs ensuite, puis score décroissant des votes actifs, et enfin alphabétique
   filtered.sort((a,b) => {
     const bA=isBanned(player,a), bB=isBanned(player,b);
     if(bA&&!bB) return -1; if(!bA&&bB) return 1;
@@ -561,14 +610,16 @@ function renderPlayer(player) {
     return a.localeCompare(b);
   });
   
+  // RESTRICTION AU TOP 10 DES PERSOS LES PLUS VOTÉS
+  filtered = filtered.slice(0, 10);
+  
   const listEl = card.querySelector('.champ-list');
   listEl.innerHTML='';
   
-  // UX OPTIMISATION : Message informatif si la liste de votes est encore vide
   if (filtered.length === 0) {
     const emptyEl = document.createElement('div');
     emptyEl.style.cssText = "font-size: 11px; color: var(--text-very-light); text-align: center; padding: 16px 8px; font-style: italic; grid-column: 1 / -1;";
-    emptyEl.textContent = search ? "Aucun champion trouvé" : "🔍 Cherche un champion pour voter";
+    emptyEl.textContent = "Aucun vote actif. Utilisez le menu ci-dessus !";
     listEl.appendChild(emptyEl);
     return;
   }
@@ -599,6 +650,13 @@ function renderPlayer(player) {
 
 function buildGrid() {
   const grid=document.getElementById('players-grid');
+  
+  // Génération unique de la liste complète des options de champions
+  let selectOptions = '<option value="" disabled selected>Voter pour un champion...</option>';
+  champions.forEach(champ => {
+    selectOptions += `<option value="${champ}">${champ}</option>`;
+  });
+
   players.forEach(player => {
     const card=document.createElement('div'); card.className='player-card'; card.id='card-'+player;
     card.innerHTML=
@@ -609,10 +667,16 @@ function buildGrid() {
           '<div class="player-pseudo">'+pseudos[player]+'</div>' +
         '</div>' +
       '</div>' +
-      '<div class="search-bar"><i class="ti ti-search"></i><input type="text" placeholder="Rechercher pour voter..." id="search-'+player+'"></div>' +
+      '<div class="search-bar"><i class="ti ti-plus"></i><select id="select-'+player+'"></select></div>' +
       '<div class="champ-list"></div>';
     grid.appendChild(card);
-    document.getElementById('search-'+player).addEventListener('input', function() { searches[player]=this.value; renderPlayer(player); });
+    
+    const selectEl = document.getElementById('select-'+player);
+    selectEl.innerHTML = selectOptions;
+    selectEl.addEventListener('change', function() {
+      window.openDropdownPicker(player, this.value);
+      this.value = ""; // Réinitialise la sélection pour permettre de revoter immédiatement
+    });
   });
   updateCardHeadersColors();
 }
@@ -694,7 +758,6 @@ function renderFunStats() {
   });
   for(const c in champGames){if(champGames[c]>mostPlayedCount){mostPlayedCount=champGames[c];mostPlayedChamp=c;}}
 
-  // CORRECTION UNICITÉ STAT DISPUTÉ : On s'assure qu'il y a de vrais votes pour attribuer la stat
   champions.forEach(c=>{
     let up=0,down=0;
     players.forEach(p=>{up+=getUp(p,c).size;down+=getDown(p,c).size;});
@@ -774,6 +837,7 @@ window.renderStatsTab = function() {
   });
 };
 
+/* ACCORDÉON : ONGLET PRINCIPAL DE L'HISTORIQUE DES GAMES */
 window.renderHistoryTab = function() {
   const container = document.getElementById('history-list');
   container.innerHTML = '';
@@ -784,18 +848,24 @@ window.renderHistoryTab = function() {
   }
   sortedGames.forEach(([gid, g]) => {
     const date = new Date(g.timestamp).toLocaleDateString('fr-FR', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-    const card = document.createElement('div');
-    card.className = 'stats-player-card';
-    card.style.cssText = 'margin-bottom:14px; grid-column: 1 / -1; width:100%';
-    let html = `<div class="stats-player-header" style="background:${g.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${g.victory ? 'var(--text-rec)' : 'var(--text-ban)'}">
-      <span style="font-weight:600">${g.victory ? '🏆 Victoire' : '💀 Défaite'}</span>
-      <span style="font-size:12px; margin-left:auto; opacity:0.8">${date}</span>
-    </div>`;
+    const detailsEl = document.createElement('details');
+    detailsEl.className = 'stats-player-card';
+    detailsEl.style.cssText = 'margin-bottom:14px; grid-column: 1 / -1; width:100%; border: 1px solid var(--border-color); border-radius: 12px; overflow:hidden; background: var(--card-gradient);';
+    
+    let headerHtml = `<summary style="background:${g.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${g.victory ? 'var(--text-rec)' : 'var(--text-ban)'}; padding:12px; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; list-style:none; user-select:none;">
+      <span>${g.victory ? '🏆 Victoire' : '💀 Défaite'}</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; opacity:0.8">${date}</span>
+        <i class="ti ti-chevron-down" style="font-size:14px; transition: transform 0.2s;"></i>
+      </div>
+    </summary>`;
+    
+    let rowsHtml = '<div style="background:rgba(0,0,0,0.01);">';
     if(g.players) {
       g.players.forEach(p => {
         const kda = `${p.kills}/${p.deaths||0}/${p.assists}`;
         const dmg = p.damage ? Math.round(p.damage/1000)+'k' : '?';
-        html += `<div class="result-row">
+        rowsHtml += `<div class="result-row">
           <img class="result-champ-icon" src="${getChampIcon(p.champion||'')}" onerror="this.style.display='none'">
           <span class="result-player">${p.playerName}</span>
           <span class="result-champ" style="color:var(--text-muted); font-size:12px;">${p.champion || '?'}</span>
@@ -804,8 +874,10 @@ window.renderHistoryTab = function() {
         </div>`;
       });
     }
-    card.innerHTML = html;
-    container.appendChild(card);
+    rowsHtml += '</div>';
+    
+    detailsEl.innerHTML = headerHtml + rowsHtml;
+    container.appendChild(detailsEl);
   });
 };
 
@@ -814,19 +886,6 @@ window.handleDragLeave= ()  => { document.getElementById('drop-zone').classList.
 window.handleDrop     = (e) => { e.preventDefault(); document.getElementById('drop-zone').classList.remove('dragover'); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); };
 window.handleFile     = (e) => { if(e.target.files[0]) processFile(e.target.files[0]); };
 
-// == LOGIQUE DE CAPTURE PAR COPIER-COLLER (CTRL + V) ==
-document.addEventListener('paste', (e) => {
-  const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-  for (let i = 0; i < items.length; i++) {
-    if (items[i].type.indexOf('image') !== -1) {
-      const file = items[i].getAsFile();
-      processFile(file);
-      break;
-    }
-  }
-});
-
-// FUZZY MATCHING : Plus robuste pour identifier le bon joueur malgré d'éventuelles erreurs de lecture OCR
 function matchClubPlayer(detectedName) {
   if (!detectedName) return null;
   const cleanDetected = detectedName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -855,7 +914,6 @@ async function processFile(file) {
     
     if (!res.ok || rawData.error) throw new Error(rawData.error || 'Erreur du Worker');
     
-    // VERIFICATION STRUCTURE : Gère l'éventualité où le worker renvoie {players: [...]} au lieu d'un tableau brut
     const playersArray = Array.isArray(rawData) ? rawData : (rawData.players || []);
     
     const filteredPlayers = playersArray.map(p => {
