@@ -980,12 +980,17 @@ function addScreenshot(file) {
 
   
 async function processFile(scoreboardFile, damageFile) {
-  // 1. Récupération du bouton pour bloquer le spam (Remplace par ton vrai ID)
+  // 1. RÉCUPÉRATION DU BOUTON (CHANGE L'ID ICI !)
+  // Si ton bouton HTML s'appelle <button id="analyze-btn">, mets "analyze-btn" ici
   const analyzeBtn = document.getElementById('id-de-ton-bouton-analyse'); 
-  if (analyzeBtn) analyzeBtn.disabled = true;
+  
+  if (analyzeBtn) analyzeBtn.disabled = true; // Bloque le bouton
 
   const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev/analyze";
-  document.getElementById('analyze-result').innerHTML = '<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse et filtrage en cours...</p></div>';
+  
+  // Affiche l'état "Analyse en cours"
+  document.getElementById('analyze-result').innerHTML = 
+    '<div class="analyzing-state"><div class="spinner"></div><p style="color:var(--text-muted);font-size:13px">Analyse en cours...</p></div>';
 
   try {
     const formData = new FormData();
@@ -994,17 +999,16 @@ async function processFile(scoreboardFile, damageFile) {
 
     const res = await fetch(workerUrl, { method: 'POST', body: formData });
 
-    // 2. Gestion spécifique de l'erreur 429 (Quota dépassé)
+    // Gestion du Quota (429)
     if (res.status === 429) {
-      throw new Error("Quota atteint : attends 10 secondes avant de relancer.");
+      throw new Error("Quota atteint : attends 30 secondes avant de relancer.");
     }
 
     const rawData = await res.json();
     
-    if (!res.ok || rawData.error) {
-      throw new Error(rawData.error || 'Erreur du Worker');
-    }
+    if (!res.ok || rawData.error) throw new Error(rawData.error || 'Erreur du Worker');
     
+    // Suite de ton code actuel :
     const playersArray = Array.isArray(rawData) ? rawData : (rawData.players || []);
     
     const filteredPlayers = playersArray.map(p => {
@@ -1016,27 +1020,24 @@ async function processFile(scoreboardFile, damageFile) {
     }).filter(p => p !== null);
 
     if(filteredPlayers.length === 0) {
-      throw new Error("Aucun joueur du club (Manu, Arthur, Nathan, Quentin, Aymeric, Vincent) n'a été détecté.");
+      throw new Error("Aucun joueur du club détecté.");
     }
 
-    const compatibleData = {
-      victory: true, 
-      players: filteredPlayers
-    };
-    
-    showResult(compatibleData);
+    showResult({ victory: true, players: filteredPlayers });
 
   } catch(err) {
     document.getElementById('analyze-result').innerHTML = '<div class="error-state">❌ ' + err.message + '</div>';
   } finally {
-    // 3. Déblocage du bouton après 10 secondes d'attente (indépendamment du succès ou de l'erreur)
+    // 2. DÉBLOCAGE AUTOMATIQUE APRÈS 30 SECONDES
+    // Quoi qu'il arrive (succès ou erreur), le bouton se remet à 0 après 30s
     if (analyzeBtn) {
       setTimeout(() => {
         analyzeBtn.disabled = false;
-      }, 10000); // 10 secondes
+      }, 30000); 
     }
   }
 }
+  
 let pendingResult=null;
 function showResult(data) {
   pendingResult=data;
