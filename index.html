@@ -52,12 +52,17 @@ body::before {
 .header { padding-bottom: 1rem; border-bottom: 1px solid var(--border-input); margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .header h1 { font-size: 20px; font-weight: 500; }
 .header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-.legend { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
-.dot { width: 8px; height: 8px; border-radius: 50%; }
 .header-right { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 .theme-toggle { background: transparent; border: 1px solid var(--border-input); padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--text-body); display: flex; align-items: center; gap: 6px; font-size: 12px; transition: all 0.1s; }
 .theme-toggle:hover { background: var(--row-hover); }
+
+/* GRILLE DES JOUEURS */
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
 
 /* TABS */
 .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); }
@@ -92,9 +97,29 @@ body::before {
 .search-bar { position: relative; padding: 6px 10px; }
 .search-bar input { width: 100%; padding: 6px 8px 6px 28px; font-size: 12px; border: 1px solid var(--border-input); border-radius: 8px; background: var(--bg-input); color: var(--text-body); outline: none; }
 .search-bar i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-very-light); }
-.champ-list { padding: 4px 0; max-height: 180px; overflow-y: auto; }
-.champ-row { display: flex; align-items: center; padding: 5px 10px; gap: 5px; transition: background 0.1s; }
-.champ-row:hover { background: var(--row-hover); }
+
+/* GRILLE COMPACTE DES CHAMPIONS */
+.champ-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+  gap: 6px !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+  padding: 10px !important;
+}
+
+.champ-row { 
+  display: flex !important; 
+  justify-content: space-between !important;
+  align-items: center !important; 
+  padding: 6px 10px !important; 
+  border-radius: 6px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  border: 1px solid rgba(255, 255, 255, 0.02) !important;
+  transition: background 0.1s; 
+}
+.champ-row:hover { background: var(--row-hover); filter: brightness(1.05); }
 .champ-row.recommended { background: var(--bg-rec); }
 .champ-row.recommended:hover { background: var(--bg-rec-hover); }
 .champ-row.banned { background: var(--bg-ban); }
@@ -102,20 +127,21 @@ body::before {
 .champ-name { font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body); }
 .champ-row.recommended .champ-name { color: var(--text-rec); font-weight: 600; }
 .champ-row.banned .champ-name { color: var(--text-ban); font-weight: 500; text-decoration: line-through; }
+
 .vote-area { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
 .vbtn { width: 22px; height: 22px; border: 1px solid var(--border-input); border-radius: 6px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-light); transition: all 0.1s; }
 .vbtn.up:hover { background: var(--bg-rec); border-color: #97C459; color: var(--text-rec); }
 .vbtn.down:hover { background: var(--bg-ban); border-color: #F09595; color: var(--text-ban); }
 .vcnt { font-size: 10px; font-weight: 500; min-width: 12px; text-align: center; color: var(--text-very-light); }
-.vcnt.up-active { color: var(--text-rec); }
-.vcnt.down-active { color: var(--text-ban); }
+.vcnt.up-active { color: var(--text-rec); font-weight: bold; }
+.vcnt.down-active { color: var(--text-ban); font-weight: bold; }
 .status-badge { font-size: 10px; font-weight: 500; border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
 .badge-rec { background: #639922; color: #fff; }
 .badge-ban { background: #A32D2D; color: #fff; }
 
 /* PANELS & COMP */
 .bottom-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-@media (max-width: 600px) { .bottom-panels { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .bottom-panels { grid-template-columns: 1fr; } }
 .team-slots { display: flex; gap: 10px; flex-wrap: wrap; padding: 12px; }
 .champ-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .champ-slot img { width: 54px; height: 54px; border-radius: 8px; border: 2px solid #639922; object-fit: cover; box-shadow: 0 0 10px rgba(99,153,34,0.4); }
@@ -128,8 +154,40 @@ body::before {
 .fun-stat-row { display: flex; align-items: center; gap: 8px; }
 .fun-stat-text b { color: var(--text-body); }
 
+/* SCREENSHOT IMPORT ZONE */
+.screenshot-header { padding: 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); }
+.screenshot-header-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; background: rgba(0,0,0,0.05); color: var(--text-body); }
+.screenshot-body { padding: 16px; }
+.drop-zone {
+  border: 2px dashed var(--border-input);
+  border-radius: 12px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--bg-input);
+  transition: all 0.2s ease;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: #639922;
+  background: var(--bg-rec-hover);
+  color: var(--text-rec);
+}
+#file-input { display: none; }
+
+/* ANIMATION CHARGEMENT ANALYSIS */
+.analyzing-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; gap: 12px; }
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border-input);
+  border-top-color: #639922;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-state { background: var(--bg-ban); color: var(--text-ban); padding: 12px; border-radius: 8px; font-size: 13px; text-align: center; font-weight: 500; }
+
 /* EDITABLE INTERFACE & RESULTS */
-.result-card { border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; margin-top: 12px; background: rgba(0,0,0,0.1); }
+.result-card { border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; margin-top: 12px; background: rgba(0,0,0,0.02); }
 .result-row { display: flex; align-items: center; padding: 8px 14px; gap: 12px; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--text-body); }
 .result-champ-icon { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; }
 .result-player { font-weight: 600; min-width: 80px; }
@@ -140,6 +198,8 @@ body::before {
 .result-actions { display: flex; gap: 8px; margin-top: 12px; }
 .btn-confirm { flex: 1; padding: 10px; background: #3B6D11; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
 .btn-retry { padding: 10px 16px; background: var(--cancel-btn-bg); color: var(--text-muted); border: none; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.btn-confirm:hover { filter: brightness(1.1); }
+.btn-retry:hover { background: var(--cancel-btn-hover); }
 
 /* STATS TAB */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
@@ -158,42 +218,19 @@ body::before {
 .stats-winrate.mid  { background: var(--bg-input); color: var(--text-muted); }
 .stats-dmg { color: var(--text-light); font-size: 11px; min-width: 55px; text-align: right; }
 
-/* PICKER OVERLAY */
+/* PICKER OVERLAY & STYLES MANQUANTS */
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
 .picker { background: var(--picker-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.25rem; width: 300px; box-shadow: var(--card-shadow); }
-.voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; color: var(--text-body); display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 6px; }
+.voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; color: var(--text-body); display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 6px; transition: all 0.1s; }
+.voter-btn:hover { background: var(--row-hover); }
+.voter-btn.already-voted { border-color: var(--text-ban); background: var(--bg-ban); color: var(--text-ban); }
+.voter-btn i { margin-left: auto; }
+.voter-mini-avatar { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.voter-mini-avatar svg { width: 100%; height: 100%; }
+.cancel-btn { width: 100%; padding: 8px; background: var(--cancel-btn-bg); color: var(--text-muted); border: none; border-radius: 8px; margin-top: 12px; cursor: pointer; font-size: 13px; transition: all 0.1s; font-weight: 500; }
+.cancel-btn:hover { background: var(--cancel-btn-hover); color: var(--text-body); }
 
 .footer { text-align: center; font-size: 11px; color: var(--text-very-light); padding: 1.5rem 0 0.5rem; }
-/* --- CORRECTION ULTRA-COMPACTE SANS TOUCHER AU HTML --- */
-
-/* On transforme la liste verticale en une grille de plusieurs colonnes */
-.champ-list {
-  display: grid !important;
-  /* Crée automatiquement autant de colonnes de 230px que possible en largeur */
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
-  gap: 6px !important;
-  max-height: none !important; /* Plus besoin de scroll interne */
-  overflow-y: visible !important;
-  padding: 10px 0 !important;
-}
-
-/* On transforme les grandes rangées en petits badges élégants */
-.champ-list > * {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 6px 10px !important;
-  border-radius: 6px !important;
-  margin: 0 !important; /* Supprime les anciens espacements verticaux */
-  box-sizing: border-box !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-
-/* Optionnel : Un petit effet au survol pour que ce soit propre */
-.champ-list > *:hover {
-  filter: brightness(1.2);
-}
-  
 </style>
 </head>
 <body>
@@ -217,7 +254,6 @@ body::before {
     <button class="tab" onclick="switchTab('history')">📜 Historique</button>
   </div>
 
-  <!-- TAB BANS -->
   <div id="tab-bans" class="tab-content active">
     <div class="players-grid" id="players-grid"></div>
     <div class="bottom-panels">
@@ -238,17 +274,14 @@ body::before {
     </div>
   </div>
 
-  <!-- TAB STATS -->
   <div id="tab-stats" class="tab-content">
     <div class="stats-grid" id="stats-grid"></div>
   </div>
 
-  <!-- TAB HISTORIQUE -->
   <div id="tab-history" class="tab-content">
     <div class="stats-grid" id="history-list"></div>
   </div>
 
-  <!-- TAB SCREENSHOT -->
   <div id="tab-screenshot" class="tab-content">
     <div class="screenshot-section">
       <div class="screenshot-header">
@@ -266,26 +299,22 @@ body::before {
             <small style="color:var(--text-very-light)">ou clique pour parcourir</small>
           </div>
           <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
-</div>
+        </div>
         <div id="analyze-result"></div>
         
         <div class="player-card" style="margin-top: 20px; padding: 14px;">
           <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
             <i class="ti ti-history" style="font-size:16px;"></i> Historique des parties enregistrées
           </div>
-          <div id="history-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+          <div id="screenshot-history-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <div class="footer">3 votes pour verrouiller · Screenshots analysés par Claude Vision</div>
-
-  <div class="footer">Dashboard Privé ARAM Club</div>
+  <div class="footer">3 votes pour verrouiller · Dashboard Privé ARAM Club</div>
 </div>
 
-<!-- PICKER OVERLAY -->
 <div class="overlay" id="overlay" style="display:none" onclick="if(event.target===this) window.closePicker()">
   <div class="picker" id="picker">
     <h3 id="picker-title" style="font-size:15px;margin-bottom:4px"></h3>
@@ -326,7 +355,6 @@ function getChampIcon(name) {
   return DDRAGON + k + ".png";
 }
 
-// ── CONFIGURATION ET APPLICATION DU THEME SOMBRE PAR DEFAUT ──
 const toggleBtn = document.getElementById('theme-toggle');
 const themeIcon = document.getElementById('theme-icon');
 const themeText = document.getElementById('theme-text');
@@ -419,22 +447,21 @@ onValue(ref(db,'games'), (snap) => {
   gameStats = snap.val() || {};
   if (document.getElementById('tab-stats').classList.contains('active')) renderStatsTab();
   renderTeamComp(); renderFunStats();
-  renderHistoryList(); // Force la mise à jour de l'historique visuel
+  renderHistoryList(); 
 });
 
-// CORRECTION : Fonctions de gestion et suppression de l'historique
+// CORRECTION ID UNIQUE : Cible désormais correctement la zone de l'onglet Importation
 window.renderHistoryList = () => {
-  const listEl = document.getElementById('history-list');
+  const listEl = document.getElementById('screenshot-history-list');
   if (!listEl) return;
   listEl.innerHTML = '';
   const entries = Object.entries(gameStats);
   
   if (entries.length === 0) {
-    listEl.innerHTML = '<div style="font-size: 12px; color: var(--text-very-light); font-style: italic;">Aucune partie dans l\'historique.</div>';
+    listEl.innerHTML = '<div style="font-size: 12px; color: var(--text-very-light); font-style: italic; text-align:center; padding:10px;">Aucune partie dans l\'historique.</div>';
     return;
   }
   
-  // Tri de la plus récente à la plus ancienne
   entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
   
   entries.forEach(([id, game]) => {
@@ -458,7 +485,7 @@ window.renderHistoryList = () => {
 
 window.deleteGame = async (id) => {
   if (confirm("Es-tu sûr de vouloir supprimer définitivement cette partie de l'historique ? Cela mettra à jour les stats instantanément.")) {
-    await set(ref(db, 'games/' + id), null); // Supprime proprement l'élément de Firebase
+    await set(ref(db, 'games/' + id), null);
   }
 };
 
@@ -517,7 +544,6 @@ function renderPlayer(player) {
   if (!card) return;
   const search = searches[player].toLowerCase();
   
-  // CORRECTION COMPACTE : Si aucune recherche n'est tapée, on masque les champions sans aucun vote
   let filtered = champions.filter(c => {
     if (!search) {
       return isRec(player, c) || isBanned(player, c) || getUp(player, c).size > 0 || getDown(player, c).size > 0;
@@ -534,8 +560,19 @@ function renderPlayer(player) {
     if(vA!==vB) return vB-vA;
     return a.localeCompare(b);
   });
+  
   const listEl = card.querySelector('.champ-list');
   listEl.innerHTML='';
+  
+  // UX OPTIMISATION : Message informatif si la liste de votes est encore vide
+  if (filtered.length === 0) {
+    const emptyEl = document.createElement('div');
+    emptyEl.style.cssText = "font-size: 11px; color: var(--text-very-light); text-align: center; padding: 16px 8px; font-style: italic; grid-column: 1 / -1;";
+    emptyEl.textContent = search ? "Aucun champion trouvé" : "🔍 Cherche un champion pour voter";
+    listEl.appendChild(emptyEl);
+    return;
+  }
+
   filtered.forEach(champ => {
     const rec=isRec(player,champ), banned=isBanned(player,champ);
     const upV=getUp(player,champ), downV=getDown(player,champ);
@@ -572,7 +609,7 @@ function buildGrid() {
           '<div class="player-pseudo">'+pseudos[player]+'</div>' +
         '</div>' +
       '</div>' +
-      '<div class="search-bar"><i class="ti ti-search"></i><input type="text" placeholder="Chercher un champion..." id="search-'+player+'"></div>' +
+      '<div class="search-bar"><i class="ti ti-search"></i><input type="text" placeholder="Rechercher pour voter..." id="search-'+player+'"></div>' +
       '<div class="champ-list"></div>';
     grid.appendChild(card);
     document.getElementById('search-'+player).addEventListener('input', function() { searches[player]=this.value; renderPlayer(player); });
@@ -657,12 +694,14 @@ function renderFunStats() {
   });
   for(const c in champGames){if(champGames[c]>mostPlayedCount){mostPlayedCount=champGames[c];mostPlayedChamp=c;}}
 
+  // CORRECTION UNICITÉ STAT DISPUTÉ : On s'assure qu'il y a de vrais votes pour attribuer la stat
   champions.forEach(c=>{
     let up=0,down=0;
     players.forEach(p=>{up+=getUp(p,c).size;down+=getDown(p,c).size;});
-    const total=up+down, controversy=Math.min(up,down);
-    if(controversy>controversialScore){controversialScore=controversy;mostControversialChamp=c;}
+    const total=up+down;
+    const controversy = (up > 0 && down > 0) ? Math.min(up,down) : 0;
     if(total>mostVotedScore){mostVotedScore=total;mostVotedChamp=c;}
+    if(controversy>0 && controversy>controversialScore){controversialScore=controversy;mostControversialChamp=c;}
   });
 
   const rows=[
@@ -735,7 +774,6 @@ window.renderStatsTab = function() {
   });
 };
 
-// ── NOUVEL ONGLET HISTORIQUE DES PARTIES ENREGISTREES ──
 window.renderHistoryTab = function() {
   const container = document.getElementById('history-list');
   container.innerHTML = '';
@@ -776,13 +814,18 @@ window.handleDragLeave= ()  => { document.getElementById('drop-zone').classList.
 window.handleDrop     = (e) => { e.preventDefault(); document.getElementById('drop-zone').classList.remove('dragover'); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); };
 window.handleFile     = (e) => { if(e.target.files[0]) processFile(e.target.files[0]); };
 
-// Fonction utilitaire de filtrage et de nettoyage pour l'IA
+// FUZZY MATCHING : Plus robuste pour identifier le bon joueur malgré d'éventuelles erreurs de lecture OCR
 function matchClubPlayer(detectedName) {
   if (!detectedName) return null;
   const cleanDetected = detectedName.toLowerCase().replace(/[^a-z0-9]/g, '');
   for (const player of players) {
-    if (player.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanDetected) return player;
-    if (pseudos[player].toLowerCase().replace(/[^a-z0-9]/g, '') === cleanDetected) return player;
+    const cleanPlayer = player.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanPseudo = pseudos[player].toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanDetected === cleanPlayer || cleanDetected === cleanPseudo ||
+        cleanDetected.includes(cleanPlayer) || cleanPlayer.includes(cleanDetected) ||
+        cleanDetected.includes(cleanPseudo) || cleanPseudo.includes(cleanDetected)) {
+      return player;
+    }
   }
   return null;
 }
@@ -800,8 +843,10 @@ async function processFile(file) {
     
     if (!res.ok || rawData.error) throw new Error(rawData.error || 'Erreur du Worker');
     
-    // FILTRAGE ET ALIGNEMENT : On ne garde que les 6 pseudos connus
-    const filteredPlayers = rawData.map(p => {
+    // VERIFICATION STRUCTURE : Gère l'éventualité où le worker renvoie {players: [...]} au lieu d'un tableau brut
+    const playersArray = Array.isArray(rawData) ? rawData : (rawData.players || []);
+    
+    const filteredPlayers = playersArray.map(p => {
       const confirmedName = matchClubPlayer(p.name);
       if (confirmedName) {
         return { ...p, playerName: confirmedName };
@@ -829,7 +874,6 @@ let pendingResult=null;
 function showResult(data) {
   pendingResult=data;
   
-  // En-tête éditable Victoire/Défaite au cas où Gemini se trompe
   let html='<div class="result-card">';
   html += `<div class="result-header" id="result-victory-header" style="padding:10px 14px; font-size:13px; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
     <span>Résultat détecté :</span>
@@ -843,7 +887,6 @@ function showResult(data) {
     const kda=p.kills+'/'+(p.deaths||0)+'/'+p.assists;
     const dmg=p.damage?Math.round(p.damage/1000)+'k':'?';
     
-    // SÉLECTEUR DE CHAMPION ÉDITABLE : Corrige les fautes de frappe de l'IA en direct
     let selectChampHtml = `<select class="result-champ-select" onchange="updatePendingChamp(${index}, this.value)">`;
     champions.forEach(c => {
       const isSelected = (p.champion && p.champion.toLowerCase().replace(/[^a-z]/g,'') === c.toLowerCase().replace(/[^a-z]/g,'')) ? 'selected' : '';
