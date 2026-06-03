@@ -56,13 +56,15 @@ body::before {
 .theme-toggle { background: transparent; border: 1px solid var(--border-input); padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--text-body); display: flex; align-items: center; gap: 6px; font-size: 12px; transition: all 0.1s; }
 .theme-toggle:hover { background: var(--row-hover); }
 
-/* GRILLE DES JOUEURS OPTIMISÉE ET PLUS SERRÉE */
+/* GRILLE DES JOUEURS (6 colonnes alignées sur grand écran) */
 .players-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
   margin-bottom: 16px;
 }
+@media (max-width: 1024px) { .players-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .players-grid { grid-template-columns: 1fr; } }
 
 /* TABS */
 .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); }
@@ -95,16 +97,16 @@ body::before {
 .player-pseudo { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 1px; }
 
 .search-bar { position: relative; padding: 6px 10px; }
-.search-bar select { width: 100%; padding: 6px 8px 6px 28px; font-size: 12px; border: 1px solid var(--border-input); border-radius: 8px; background: var(--bg-input); color: var(--text-body); outline: none; cursor: pointer; }
-.search-bar i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-very-light); pointer-events: none; }
+.search-bar input { width: 100%; padding: 6px 8px 6px 28px; font-size: 12px; border: 1px solid var(--border-input); border-radius: 8px; background: var(--bg-input); color: var(--text-body); outline: none; }
+.search-bar i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-very-light); }
 
-/* GRILLE EN UNIQUE COLONNE COMPACTE POUR LE TOP 10 */
+/* LISTE DES CHAMPIONS AVEC SCROLLBAR */
 .champ-list {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  gap: 6px !important;
-  max-height: none !important;
-  overflow-y: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  max-height: 260px !important;
+  overflow-y: auto !important;
   padding: 10px !important;
 }
 
@@ -118,6 +120,7 @@ body::before {
   box-sizing: border-box !important;
   border: 1px solid rgba(255, 255, 255, 0.02) !important;
   transition: background 0.1s; 
+  flex-shrink: 0;
 }
 .champ-row:hover { background: var(--row-hover); filter: brightness(1.05); }
 .champ-row.recommended { background: var(--bg-rec); }
@@ -201,8 +204,15 @@ body::before {
 .btn-confirm:hover { filter: brightness(1.1); }
 .btn-retry:hover { background: var(--cancel-btn-hover); }
 
-/* STATS TAB */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+/* STATS TAB (3 colonnes, soit 3 puis 3 alignées verticalement) */
+.stats-grid { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 12px; 
+}
+@media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+
 .stats-player-header { padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.01); }
 .stats-player-info { flex: 1; }
 .stats-player-name { font-size: 14px; font-weight: 600; }
@@ -218,12 +228,7 @@ body::before {
 .stats-winrate.mid  { background: var(--bg-input); color: var(--text-muted); }
 .stats-dmg { color: var(--text-light); font-size: 11px; min-width: 55px; text-align: right; }
 
-/* GESTION ACCORDÉONS/CHEVRONS DE L'HISTORIQUE */
-summary::-webkit-details-marker { display: none; }
-summary { list-style: none; }
-details[open] summary i.ti-chevron-down { transform: rotate(180deg); }
-
-/* PICKER OVERLAY & STYLES */
+/* PICKER OVERLAY */
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
 .picker { background: var(--picker-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.25rem; width: 300px; box-shadow: var(--card-shadow); }
 .voter-btn { padding: 8px 12px; border: 1px solid var(--border-input); border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; color: var(--text-body); display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 6px; transition: all 0.1s; }
@@ -293,14 +298,14 @@ details[open] summary i.ti-chevron-down { transform: rotate(180deg); }
         <div class="screenshot-header-avatar"><i class="ti ti-camera"></i></div>
         <div>
           <div class="player-name">Importer une partie</div>
-          <div class="player-pseudo">Fichier de capture d'écran de fin de jeu</div>
+          <div class="player-pseudo">Fichier de capture d'écran de fin de jeu (ou fais un simple CTRL+V)</div>
         </div>
       </div>
       <div class="screenshot-body">
         <div id="drop-area">
           <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
             <i class="ti ti-screenshot" style="font-size:32px;margin-bottom:8px;display:block;color:var(--text-light)"></i>
-            <p>Dépose ton screenshot ici</p>
+            <p>Dépose ton screenshot ici ou fais CTRL + V</p>
             <small style="color:var(--text-very-light)">ou clique pour parcourir</small>
           </div>
           <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
@@ -426,7 +431,8 @@ const championRoles = {
 };
 
 let upVotes={}, downVotes={}, gameStats={};
-players.forEach(p => { upVotes[p]={}; downVotes[p]={}; });
+const searches={};
+players.forEach(p => { upVotes[p]={}; downVotes[p]={}; searches[p]=""; });
 
 let pendingVote=null;
 const getUp   = (t,c) => (upVotes[t]   && upVotes[t][c])   ? upVotes[t][c]   : new Set();
@@ -454,7 +460,6 @@ onValue(ref(db,'games'), (snap) => {
   renderHistoryList(); 
 });
 
-/* ACCORDÉON : HISTORIQUE DE LA ZONE SCREENSHOT */
 window.renderHistoryList = () => {
   const listEl = document.getElementById('screenshot-history-list');
   if (!listEl) return;
@@ -469,39 +474,21 @@ window.renderHistoryList = () => {
   entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
   
   entries.forEach(([id, game]) => {
-    const detailsEl = document.createElement('details');
-    detailsEl.style.cssText = "background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px; overflow:hidden; margin-bottom:6px;";
+    const row = document.createElement('div');
+    row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px;";
     
     const dateStr = game.timestamp ? new Date(game.timestamp).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : 'Date inconnue';
     const statusText = game.victory ? '<span style="color:var(--text-rec); font-weight:bold;">🏆 Victoire</span>' : '<span style="color:var(--text-ban); font-weight:bold;">💀 Défaite</span>';
     const compositions = game.players ? game.players.map(p => p.champion || '?').join(', ') : 'Données incomplètes';
     
-    let summaryHtml = `<summary style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor:pointer; list-style:none; user-select:none;">
+    row.innerHTML = `
       <div style="min-width: 0; flex: 1; padding-right: 8px;">
         <div>${statusText} — <span style="color:var(--text-muted);">${dateStr}</span></div>
+        <div style="font-size: 10px; color: var(--text-very-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">${compositions}</div>
       </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <button onclick="event.stopPropagation(); event.preventDefault(); deleteGame('${id}')" style="background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px;" title="Supprimer la partie">🗑️</button>
-        <i class="ti ti-chevron-down" style="font-size:12px; color:var(--text-light)"></i>
-      </div>
-    </summary>`;
-    
-    let bodyHtml = `<div style="padding: 8px 12px; border-top:1px solid var(--border-color); background:rgba(0,0,0,0.02); font-size:11px; color:var(--text-muted);">`;
-    if (game.players) {
-      game.players.forEach(p => {
-        const kda = `${p.kills}/${p.deaths||0}/${p.assists}`;
-        bodyHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span style="font-weight:600; color:var(--text-body);">${p.playerName}</span>
-          <span>${p.champion || '?'} (${kda})</span>
-        </div>`;
-      });
-    } else {
-      bodyHtml += `<div>${compositions}</div>`;
-    }
-    bodyHtml += `</div>`;
-    
-    detailsEl.innerHTML = summaryHtml + bodyHtml;
-    listEl.appendChild(detailsEl);
+      <button onclick="deleteGame('${id}')" style="background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px;" title="Supprimer la partie">🗑️</button>
+    `;
+    listEl.appendChild(row);
   });
 };
 
@@ -522,35 +509,6 @@ function updateCardHeadersColors() {
     }
   });
 }
-
-/* WIZARD DE SELECTION DE VOTE VIA DROPDOWN COMPACT */
-window.openDropdownPicker = (target, champ) => {
-  if (!champ) return;
-  pendingVote = { target, champ };
-  document.getElementById('picker-title').textContent = 'Voter pour ' + champ + ' (' + target + ')';
-  document.getElementById('picker-sub').textContent = 'Sélectionnez le type d\'action à appliquer :';
-  const list = document.getElementById('voter-list');
-  list.innerHTML = '';
-  
-  const btnUp = document.createElement('button');
-  btnUp.className = 'voter-btn';
-  btnUp.innerHTML = '👍 Recommander / Gérer la recommandation';
-  btnUp.onclick = () => window.openPickerFromDropdown('up');
-  
-  const btnDown = document.createElement('button');
-  btnDown.className = 'voter-btn';
-  btnDown.innerHTML = '👎 Bannir / Gérer le ban';
-  btnDown.onclick = () => window.openPickerFromDropdown('down');
-  
-  list.appendChild(btnUp);
-  list.appendChild(btnDown);
-  document.getElementById('overlay').style.display = 'flex';
-};
-
-window.openPickerFromDropdown = (type) => {
-  const { target, champ } = pendingVote;
-  openPicker(type, target, champ);
-};
 
 function openPicker(type, target, champ) {
   if (type==='up'   && isRec(target,champ))    return;
@@ -593,13 +551,13 @@ window.removeVote  = (voter) => { const {type,target,champ}=pendingVote; set(ref
 function renderPlayer(player) {
   const card = document.getElementById('card-'+player);
   if (!card) return;
+  const search = searches[player].toLowerCase();
   
-  // On récupère uniquement les champions qui possèdent un vote ou un statut
   let filtered = champions.filter(c => {
-    return isRec(player, c) || isBanned(player, c) || getUp(player, c).size > 0 || getDown(player, c).size > 0;
+    if (!search) return true; 
+    return c.toLowerCase().includes(search);
   });
 
-  // Tri : bans d'abord, recs ensuite, puis score décroissant des votes actifs, et enfin alphabétique
   filtered.sort((a,b) => {
     const bA=isBanned(player,a), bB=isBanned(player,b);
     if(bA&&!bB) return -1; if(!bA&&bB) return 1;
@@ -610,16 +568,13 @@ function renderPlayer(player) {
     return a.localeCompare(b);
   });
   
-  // RESTRICTION AU TOP 10 DES PERSOS LES PLUS VOTÉS
-  filtered = filtered.slice(0, 10);
-  
   const listEl = card.querySelector('.champ-list');
   listEl.innerHTML='';
   
   if (filtered.length === 0) {
     const emptyEl = document.createElement('div');
     emptyEl.style.cssText = "font-size: 11px; color: var(--text-very-light); text-align: center; padding: 16px 8px; font-style: italic; grid-column: 1 / -1;";
-    emptyEl.textContent = "Aucun vote actif. Utilisez le menu ci-dessus !";
+    emptyEl.textContent = "Aucun champion trouvé";
     listEl.appendChild(emptyEl);
     return;
   }
@@ -650,13 +605,6 @@ function renderPlayer(player) {
 
 function buildGrid() {
   const grid=document.getElementById('players-grid');
-  
-  // Génération unique de la liste complète des options de champions
-  let selectOptions = '<option value="" disabled selected>Voter pour un champion...</option>';
-  champions.forEach(champ => {
-    selectOptions += `<option value="${champ}">${champ}</option>`;
-  });
-
   players.forEach(player => {
     const card=document.createElement('div'); card.className='player-card'; card.id='card-'+player;
     card.innerHTML=
@@ -667,16 +615,10 @@ function buildGrid() {
           '<div class="player-pseudo">'+pseudos[player]+'</div>' +
         '</div>' +
       '</div>' +
-      '<div class="search-bar"><i class="ti ti-plus"></i><select id="select-'+player+'"></select></div>' +
+      '<div class="search-bar"><i class="ti ti-search"></i><input type="text" placeholder="Rechercher..." id="search-'+player+'"></div>' +
       '<div class="champ-list"></div>';
     grid.appendChild(card);
-    
-    const selectEl = document.getElementById('select-'+player);
-    selectEl.innerHTML = selectOptions;
-    selectEl.addEventListener('change', function() {
-      window.openDropdownPicker(player, this.value);
-      this.value = ""; // Réinitialise la sélection pour permettre de revoter immédiatement
-    });
+    document.getElementById('search-'+player).addEventListener('input', function() { searches[player]=this.value; renderPlayer(player); });
   });
   updateCardHeadersColors();
 }
@@ -814,7 +756,7 @@ window.renderStatsTab = function() {
         '<div class="player-avatar" style="border:2px solid '+col.border+'">'+avatarSVGs[player]+'</div>' +
         '<div class="stats-player-info">' +
           '<div class="stats-player-name">'+player+'</div>' +
-          '<div class="stats-player-summary">'+(totalGames>0?totalGames+' parties · '+(wr!==null?wr+'% WR':''):'Aucun match enregistré')+'</div>' +
+          '<div class="stats-player-summary">'+(totalGames>0?totalGames+(totalGames > 1 ? ' parties' : ' partie')+' · '+(wr!==null?wr+'% WR':''):'Aucun match enregistré')+'</div>' +
         '</div>' +
       '</div>' +
       '<div class="stats-champ-list" id="stats-'+player+'"></div>';
@@ -830,14 +772,13 @@ window.renderStatsTab = function() {
         '<img class="stats-champ-icon" src="'+getChampIcon(champ)+'" onerror="this.style.display=\'none\'" alt="">' +
         '<span class="stats-champ-name">'+champ+'</span>' +
         '<span class="stats-kda">'+kda+' KDA</span>' +
-        '<span class="stats-winrate '+(wr>=60?'good':wr<=40?'bad':'mid')+'">'+wr+'% ('+data.games+'g)</span>' +
+        '<span class="stats-winrate '+(wr>=60?'good':wr<=40?'bad':'mid')+'">'+wr+'% ('+data.games+(data.games > 1 ? ' parties' : ' partie')+')</span>' +
         '<span class="stats-dmg">'+(avgDmg>0?Math.round(avgDmg/1000)+'k dmg':'')+'</span>';
       listEl.appendChild(row);
     });
   });
 };
 
-/* ACCORDÉON : ONGLET PRINCIPAL DE L'HISTORIQUE DES GAMES */
 window.renderHistoryTab = function() {
   const container = document.getElementById('history-list');
   container.innerHTML = '';
@@ -848,24 +789,18 @@ window.renderHistoryTab = function() {
   }
   sortedGames.forEach(([gid, g]) => {
     const date = new Date(g.timestamp).toLocaleDateString('fr-FR', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-    const detailsEl = document.createElement('details');
-    detailsEl.className = 'stats-player-card';
-    detailsEl.style.cssText = 'margin-bottom:14px; grid-column: 1 / -1; width:100%; border: 1px solid var(--border-color); border-radius: 12px; overflow:hidden; background: var(--card-gradient);';
-    
-    let headerHtml = `<summary style="background:${g.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${g.victory ? 'var(--text-rec)' : 'var(--text-ban)'}; padding:12px; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; list-style:none; user-select:none;">
-      <span>${g.victory ? '🏆 Victoire' : '💀 Défaite'}</span>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:12px; opacity:0.8">${date}</span>
-        <i class="ti ti-chevron-down" style="font-size:14px; transition: transform 0.2s;"></i>
-      </div>
-    </summary>`;
-    
-    let rowsHtml = '<div style="background:rgba(0,0,0,0.01);">';
+    const card = document.createElement('div');
+    card.className = 'stats-player-card';
+    card.style.cssText = 'margin-bottom:14px; grid-column: 1 / -1; width:100%';
+    let html = `<div class="stats-player-header" style="background:${g.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${g.victory ? 'var(--text-rec)' : 'var(--text-ban)'}">
+      <span style="font-weight:600">${g.victory ? '🏆 Victoire' : '💀 Défaite'}</span>
+      <span style="font-size:12px; margin-left:auto; opacity:0.8">${date}</span>
+    </div>`;
     if(g.players) {
       g.players.forEach(p => {
         const kda = `${p.kills}/${p.deaths||0}/${p.assists}`;
         const dmg = p.damage ? Math.round(p.damage/1000)+'k' : '?';
-        rowsHtml += `<div class="result-row">
+        html += `<div class="result-row">
           <img class="result-champ-icon" src="${getChampIcon(p.champion||'')}" onerror="this.style.display='none'">
           <span class="result-player">${p.playerName}</span>
           <span class="result-champ" style="color:var(--text-muted); font-size:12px;">${p.champion || '?'}</span>
@@ -874,10 +809,8 @@ window.renderHistoryTab = function() {
         </div>`;
       });
     }
-    rowsHtml += '</div>';
-    
-    detailsEl.innerHTML = headerHtml + rowsHtml;
-    container.appendChild(detailsEl);
+    card.innerHTML = html;
+    container.appendChild(card);
   });
 };
 
@@ -1023,6 +956,17 @@ window.confirmSave=async()=>{
   pendingResult=null;
   setTimeout(() => { window.resetScreenshot(); window.switchTab('history'); }, 1500);
 };
+
+// Prise en charge du CTRL+V pour coller directement un screenshot
+window.addEventListener('paste', (e) => {
+  if (e.clipboardData && e.clipboardData.files.length > 0) {
+    const file = e.clipboardData.files[0];
+    if (file.type.startsWith('image/')) {
+      window.switchTab('screenshot');
+      processFile(file);
+    }
+  }
+});
 </script>
 </body>
 </html>
