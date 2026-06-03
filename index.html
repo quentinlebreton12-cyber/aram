@@ -835,38 +835,72 @@ window.renderStatsTab = function() {
   });
 };
 
-window.renderHistoryTab = function() {
+window.renderHistoryTab = () => {
   const container = document.getElementById('history-list');
   container.innerHTML = '';
-  const sortedGames = Object.entries(gameStats).sort((a,b) => b[1].timestamp - a[1].timestamp);
-  if(sortedGames.length === 0) {
-    container.innerHTML = '<div class="no-games">Aucune partie dans la base de données.</div>';
+  
+  // On récupère tes parties (ajuste 'gameStats' si ta variable s'appelle différemment)
+  const games = Object.values(window.gameStats || {}).reverse();
+
+  if (games.length === 0) {
+    container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Aucune partie enregistrée pour le moment.</p>';
     return;
   }
-  sortedGames.forEach(([gid, g]) => {
-    const date = new Date(g.timestamp).toLocaleDateString('fr-FR', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-    const card = document.createElement('div');
-    card.className = 'stats-player-card';
-    card.style.cssText = 'margin-bottom:14px; grid-column: 1 / -1; width:100%';
-    let html = `<div class="stats-player-header" style="background:${g.victory ? 'var(--bg-rec)' : 'var(--bg-ban)'}; color:${g.victory ? 'var(--text-rec)' : 'var(--text-ban)'}">
-      <span style="font-weight:600">${g.victory ? '🏆 Victoire' : '💀 Défaite'}</span>
-      <span style="font-size:12px; margin-left:auto; opacity:0.8">${date}</span>
-    </div>`;
-    if(g.players) {
-      g.players.forEach(p => {
-        const kda = `${p.kills}/${p.deaths||0}/${p.assists}`;
-        const dmg = p.damage ? Math.round(p.damage/1000)+'k' : '?';
-        html += `<div class="result-row">
-          <img class="result-champ-icon" src="${getChampIcon(p.champion||'')}" onerror="this.style.display='none'">
-          <span class="result-player">${p.playerName}</span>
-          <span class="result-champ" style="color:var(--text-muted); font-size:12px;">${p.champion || '?'}</span>
-          <span class="result-kda" style="color:var(--text-body); font-size:12px;">${kda}</span>
-          <span class="result-dmg">${dmg}</span>
-        </div>`;
-      });
-    }
-    card.innerHTML = html;
-    container.appendChild(card);
+
+  games.forEach((game) => {
+    const details = document.createElement('details');
+    details.style.marginBottom = "15px";
+    details.style.border = "1px solid var(--border-color)";
+    details.style.borderRadius = "12px";
+    details.style.overflow = "hidden";
+    details.style.backgroundColor = "var(--bg-card)";
+    
+    // Header du résumé (cliquable)
+    const summary = document.createElement('summary');
+    summary.style.cursor = "pointer";
+    summary.style.padding = "15px";
+    summary.style.fontWeight = "bold";
+    summary.style.display = "flex";
+    summary.style.justifyContent = "space-between";
+    summary.style.backgroundColor = game.victory ? "var(--bg-rec)" : "var(--bg-ban)";
+    summary.style.color = game.victory ? "var(--text-rec)" : "var(--text-ban)";
+    summary.innerHTML = `
+      <span>${game.victory ? '✅ VICTOIRE' : '❌ DÉFAITE'}</span>
+      <span style="font-size: 0.8em; opacity: 0.7;">${new Date(game.timestamp).toLocaleDateString()}</span>
+    `;
+    
+    // Contenu détaillé (la liste des joueurs)
+    const content = document.createElement('div');
+    content.style.padding = "10px";
+    
+    let tableHtml = `
+      <table style="width:100%; border-collapse:collapse; font-size: 0.9em;">
+        <thead>
+          <tr style="color:var(--text-muted);">
+            <th style="text-align:left; padding:5px;">Joueur</th>
+            <th style="text-align:center; padding:5px;">K/D/A</th>
+            <th style="text-align:right; padding:5px;">Dégâts</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    game.players.forEach(p => {
+      tableHtml += `
+        <tr style="border-top:1px solid var(--border-color);">
+          <td style="padding:8px 5px;">${p.playerName || p.name} <small style="display:block; color:var(--text-light);">${p.champion}</small></td>
+          <td style="text-align:center; padding:8px 5px;">${p.kills}/${p.deaths}/${p.assists}</td>
+          <td style="text-align:right; padding:8px 5px;">${p.damage.toLocaleString()}</td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `</tbody></table>`;
+    content.innerHTML = tableHtml;
+    
+    details.appendChild(summary);
+    details.appendChild(content);
+    container.appendChild(details);
   });
 };
 
