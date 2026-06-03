@@ -836,6 +836,22 @@ window.renderStatsTab = function() {
   });
 };
 
+const getChampionImageUrl = (name) => {
+  const exceptions = {
+    "LeBlanc": "Leblanc",
+    "Cho'Gath": "Chogath",
+    "Kha'Zix": "Khazix",
+    "Wukong": "MonkeyKing",
+    "Kai'Sa": "Kaisa",
+    "Vel'Koz": "Velkoz",
+    "Rek'Sai": "Reksai"
+  };
+  // Nettoie le nom pour qu'il corresponde aux fichiers Riot
+  const cleanName = exceptions[name] || name.replace(/[^a-zA-Z]/g, '');
+  return `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${cleanName}.png`;
+};
+
+  
 window.renderHistoryTab = async () => {
   const container = document.getElementById('history-list');
   container.innerHTML = '<p style="text-align:center;">Chargement...</p>';
@@ -859,7 +875,7 @@ window.renderHistoryTab = async () => {
       let playersHtml = (game.players || []).map(p => {
         // Nettoyage du nom pour l'URL Riot (ex: "Cho'Gath" -> "Chogath")
         const champName = (p.champion || 'Aatrox').replace(/[^a-zA-Z]/g, '');
-        const champImg = `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champName}.png`;
+        const champImg = getChampionImageUrl(p.champion || 'Aatrox');
         
         return `
           <div style="display:flex; align-items:center; padding:8px 0; border-top:1px solid var(--border-color);">
