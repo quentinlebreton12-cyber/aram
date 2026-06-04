@@ -452,21 +452,7 @@ const avatarSVGs = {
   Vincent: `<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="18" fill="#1A3A1A"/><path d="M14,8 l0,8 l-4,8 h16 l-4,-8 l0,-8z" fill="#7FFF00" opacity="0.7" stroke="#333" stroke-width="0.8"/><path d="M14,16 l-4,8 h16 l-4,-8z" fill="#00FF7F" opacity="0.5"/><circle cx="16" cy="22" r="1.5" fill="white" opacity="0.8"/><circle cx="20" cy="25" r="1" fill="white" opacity="0.6"/><circle cx="18" cy="20" r="1" fill="white" opacity="0.7"/><rect x="15" y="6" width="6" height="3" rx="1" fill="#8B4513"/><polygon points="28,4 24,10 32,10" fill="#4A0080" stroke="#9B59B6" stroke-width="0.8"/><text x="26" y="9" font-size="4" fill="white" font-weight="bold">20</text><ellipse cx="15" cy="14" rx="2.5" ry="2" fill="none" stroke="#333" stroke-width="1"/><ellipse cx="21" cy="14" rx="2.5" ry="2" fill="none" stroke="#333" stroke-width="1"/><line x1="17.5" y1="14" x2="18.5" y2="14" stroke="#333" stroke-width="1"/></svg>`
 };
 
-// Fonction pour gérer l'upload (via clic ou drag&drop)
-window.handleFile = (event) => {
-  const file = event.target.files[0];
-  processScreenshots(file);
-};
-
-window.handleDrop = (event) => {
-  event.preventDefault();
-  const file = event.dataTransfer.files[0];
-  processScreenshots(file);
-};
-
-// Pas besoin de changer ton handleDragOver, il est déjà là
-window.handleDragOver = (e) => e.preventDefault();
-window.handleDragLeave = (e) => e.preventDefault();
+// handleFile, handleDrop, handleDragOver définis plus bas avec addScreenshot
 
 
   
@@ -980,6 +966,25 @@ function addScreenshot(file) {
 }
 
   
+// Redimensionne une image avant envoi pour réduire la taille et les coûts
+function resizeImage(file, maxWidth = 1280) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // fallback : fichier original
+    img.src = url;
+  });
+}
+
 async function processFile(scoreboardFile, damageFile) {
   if (isAnalyzing) return;
   isAnalyzing = true;
