@@ -966,8 +966,8 @@ function addScreenshot(file) {
 }
 
   
-// Redimensionne une image avant envoi pour réduire la taille et les coûts
-function resizeImage(file, maxWidth = 1280) {
+// Redimensionne et compresse fortement les images pour éviter le hors-quota Gemini
+function resizeImage(file, maxWidth = 900) {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -978,7 +978,8 @@ function resizeImage(file, maxWidth = 1280) {
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+      // Correction : qualité baissée à 0.60 pour un fichier ultra-léger en tokens
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.60);
     };
     img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // fallback : fichier original
     img.src = url;
@@ -989,48 +990,43 @@ async function processFile(scoreboardFile, damageFile) {
   if (isAnalyzing) return;
   isAnalyzing = true;
 
-  // AJOUT : Compression des images ici
+  // Compression des images améliorée
   const smallScoreboard = await resizeImage(scoreboardFile);
   const smallDamage = await resizeImage(damageFile);
 
   const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev/analyze";
   
-  // ... reste de ta fonction ...
   try {
     const formData = new FormData();
-    // Utilise les images compressées (small) au lieu des originales
     formData.append("scoreboard", smallScoreboard);
     formData.append("damage", smallDamage);
 
     const res = await fetch(workerUrl, { method: 'POST', body: formData });
-    // ...
 
     if (res.status === 429) {
-      throw new Error("Quota atteint : attends 30 secondes.");
+      throw new Error("Quota Gemini temporairement atteint. Réessaie dans quelques secondes.");
     }
 
     const rawData = await res.json();
     if (!res.ok || rawData.error) throw new Error(rawData.error || 'Erreur du Worker');
     
-    // ... (ton code de filtrage des joueurs reste identique)
     const playersArray = Array.isArray(rawData) ? rawData : (rawData.players || []);
     const filteredPlayers = playersArray.map(p => {
       const confirmedName = matchClubPlayer(p.name);
       return confirmedName ? { ...p, playerName: confirmedName } : null;
     }).filter(p => p !== null);
 
-    if(filteredPlayers.length === 0) throw new Error("Aucun joueur du club détecté.");
+    if(filteredPlayers.length === 0) throw new Error("Aucun joueur du club détecté sur l'image.");
 
     showResult({ victory: true, players: filteredPlayers });
+    
+    // Si tout va bien, on libère le verrou après l'affichage du résultat
+    isAnalyzing = false;
 
   } catch(err) {
     document.getElementById('analyze-result').innerHTML = '<div class="error-state">❌ ' + err.message + '</div>';
-  } finally {
-    // ON NE DÉBLOQUE PAS TOUT DE SUITE
-    // On attend 30 secondes avant de remettre isAnalyzing à false
-    setTimeout(() => {
-      isAnalyzing = false;
-    }, 30000); // 30 secondes de sécurité pour le quota Gemini
+    // CRUCIAL : En cas d'erreur, on débloque TOUT DE SUITE pour pouvoir réessayer
+    isAnalyzing = false;
   }
 }
   
@@ -1106,7 +1102,7 @@ window.updatePendingChamp = (index, newChampName) => {
 
 window.resetScreenshot=()=>{
   pendingResult=null;
-  // On réinitialise la mémoire pour la prochaine partie
+  isAnalyzing = false; // Sécurité : libère le système au reset
   gameScreenshots.scoreboard = null;
   gameScreenshots.damageGraph = null;
   document.getElementById('analyze-result').innerHTML='';
