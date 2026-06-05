@@ -333,10 +333,19 @@ body::before {
         </div>
       </div>
       <div class="screenshot-body">
+        <!-- Sélecteur de mode -->
+        <div id="mode-selector" style="display:flex;gap:8px;margin-bottom:12px;">
+          <button id="mode-btn-single" onclick="setScreenshotMode('single')" style="flex:1;padding:10px 8px;border-radius:8px;border:2px solid #639922;background:var(--bg-rec);color:var(--text-rec);font-size:12px;font-weight:600;cursor:pointer;">
+            📸 Juste après la game<br><span style="font-weight:400;opacity:0.8">1 seul screenshot (tout visible)</span>
+          </button>
+          <button id="mode-btn-double" onclick="setScreenshotMode('double')" style="flex:1;padding:10px 8px;border-radius:8px;border:2px solid var(--border-input);background:var(--bg-input);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;">
+            🗂️ Depuis l'historique<br><span style="font-weight:400;opacity:0.8">2 screenshots séparés</span>
+          </button>
+        </div>
         <div id="drop-area">
           <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
             <i class="ti ti-screenshot" style="font-size:32px;margin-bottom:8px;display:block;color:var(--text-light)"></i>
-            <p>Dépose ton screenshot ici ou fais CTRL + V</p>
+            <p id="drop-zone-text">Dépose ton screenshot ici ou fais CTRL + V</p>
             <small style="color:var(--text-very-light)">ou clique pour parcourir</small>
           </div>
           <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
@@ -370,6 +379,38 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getDatabase, ref, set, push, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 let isAnalyzing = false; // Cette variable empêchera le lancement multiple
+let screenshotMode = 'single'; // 'single' ou 'double'
+
+window.setScreenshotMode = (mode) => {
+  screenshotMode = mode;
+  // Reset état
+  gameScreenshots.scoreboard = null;
+  gameScreenshots.damageGraph = null;
+  document.getElementById('analyze-result').innerHTML = '';
+  document.getElementById('file-input').value = '';
+
+  const btnSingle = document.getElementById('mode-btn-single');
+  const btnDouble = document.getElementById('mode-btn-double');
+  const dropText  = document.getElementById('drop-zone-text');
+
+  if (mode === 'single') {
+    btnSingle.style.border = '2px solid #639922';
+    btnSingle.style.background = 'var(--bg-rec)';
+    btnSingle.style.color = 'var(--text-rec)';
+    btnDouble.style.border = '2px solid var(--border-input)';
+    btnDouble.style.background = 'var(--bg-input)';
+    btnDouble.style.color = 'var(--text-muted)';
+    dropText.textContent = 'Screenshot de fin de game (KDA + dégâts visibles)';
+  } else {
+    btnDouble.style.border = '2px solid #639922';
+    btnDouble.style.background = 'var(--bg-rec)';
+    btnDouble.style.color = 'var(--text-rec)';
+    btnSingle.style.border = '2px solid var(--border-input)';
+    btnSingle.style.background = 'var(--bg-input)';
+    btnSingle.style.color = 'var(--text-muted)';
+    dropText.textContent = 'Screenshot 1 : Scoreboard (KDA)';
+  }
+};
   
 const firebaseConfig = {
   apiKey: "AIzaSyDndpGMcH8iXz7ytKpYWBHGy4nmxC0fChE",
@@ -927,14 +968,32 @@ function matchClubPlayer(detectedName) {
 
 function addScreenshot(file) {
 
+  // MODE 1 SCREENSHOT : on envoie directement avec le même fichier en scoreboard et damage
+  if (screenshotMode === 'single') {
+    gameScreenshots.scoreboard = file;
+    gameScreenshots.damageGraph = file; // même image, le modèle extrait tout
+
+    document.getElementById('analyze-result').innerHTML = `
+      <div class="analyzing-state">
+        <div class="spinner"></div>
+        <p style="color:var(--text-muted);font-size:13px">Analyse du screenshot en cours...</p>
+      </div>
+    `;
+
+    processFile(gameScreenshots.scoreboard, gameScreenshots.damageGraph);
+    return;
+  }
+
+  // MODE 2 SCREENSHOTS
   if (!gameScreenshots.scoreboard) {
 
     gameScreenshots.scoreboard = file;
 
+    document.getElementById('drop-zone-text').textContent = 'Screenshot 2 : Graphique des dégâts';
     document.getElementById('analyze-result').innerHTML = `
       <div class="result-card" style="padding:12px">
         <div style="font-weight:600;margin-bottom:4px">
-          ✅ Screenshot 1 reçu
+          ✅ Screenshot 1 reçu (Scoreboard)
         </div>
         <div style="font-size:12px;color:var(--text-muted)">
           Envoie maintenant le screenshot du graphique des dégâts.
@@ -966,8 +1025,8 @@ function addScreenshot(file) {
 }
 
   
-// Redimensionne et compresse fortement les images pour éviter le hors-quota Gemini
-function resizeImage(file, maxWidth = 900) {
+// Redimensionne une image avant envoi pour réduire la taille et les coûts
+function resizeImage(file, maxWidth = 1280) {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -978,8 +1037,7 @@ function resizeImage(file, maxWidth = 900) {
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      // Correction : qualité baissée à 0.60 pour un fichier ultra-léger en tokens
-      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.60);
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
     };
     img.onerror = () => { URL.revokeObjectURL(url); resolve(file); }; // fallback : fichier original
     img.src = url;
@@ -990,43 +1048,51 @@ async function processFile(scoreboardFile, damageFile) {
   if (isAnalyzing) return;
   isAnalyzing = true;
 
-  // Compression des images améliorée
+  const isSingleMode = scoreboardFile === damageFile;
+
+  // Compression des images
   const smallScoreboard = await resizeImage(scoreboardFile);
-  const smallDamage = await resizeImage(damageFile);
 
   const workerUrl = "https://aram-stats-worker.quentin-lebreton12.workers.dev/analyze";
-  
+
   try {
     const formData = new FormData();
     formData.append("scoreboard", smallScoreboard);
-    formData.append("damage", smallDamage);
+
+    if (isSingleMode) {
+      // On envoie le même fichier en "damage" pour signaler au worker qu'on a tout sur un écran
+      formData.append("damage", smallScoreboard);
+      formData.append("singleScreenshot", "true");
+    } else {
+      const smallDamage = await resizeImage(damageFile);
+      formData.append("damage", smallDamage);
+    }
 
     const res = await fetch(workerUrl, { method: 'POST', body: formData });
 
     if (res.status === 429) {
-      throw new Error("Quota Gemini temporairement atteint. Réessaie dans quelques secondes.");
+      throw new Error("Quota Gemini atteint, réessaie dans quelques minutes.");
     }
 
     const rawData = await res.json();
     if (!res.ok || rawData.error) throw new Error(rawData.error || 'Erreur du Worker');
-    
+
     const playersArray = Array.isArray(rawData) ? rawData : (rawData.players || []);
     const filteredPlayers = playersArray.map(p => {
       const confirmedName = matchClubPlayer(p.name);
       return confirmedName ? { ...p, playerName: confirmedName } : null;
     }).filter(p => p !== null);
 
-    if(filteredPlayers.length === 0) throw new Error("Aucun joueur du club détecté sur l'image.");
+    if (filteredPlayers.length === 0) throw new Error("Aucun joueur du club détecté.");
 
     showResult({ victory: true, players: filteredPlayers });
-    
-    // Si tout va bien, on libère le verrou après l'affichage du résultat
-    isAnalyzing = false;
 
   } catch(err) {
     document.getElementById('analyze-result').innerHTML = '<div class="error-state">❌ ' + err.message + '</div>';
-    // CRUCIAL : En cas d'erreur, on débloque TOUT DE SUITE pour pouvoir réessayer
-    isAnalyzing = false;
+  } finally {
+    setTimeout(() => {
+      isAnalyzing = false;
+    }, 30000);
   }
 }
   
@@ -1102,11 +1168,16 @@ window.updatePendingChamp = (index, newChampName) => {
 
 window.resetScreenshot=()=>{
   pendingResult=null;
-  isAnalyzing = false; // Sécurité : libère le système au reset
+  // On réinitialise la mémoire pour la prochaine partie
   gameScreenshots.scoreboard = null;
   gameScreenshots.damageGraph = null;
   document.getElementById('analyze-result').innerHTML='';
   document.getElementById('file-input').value='';
+  // Reset le texte de la drop zone selon le mode
+  const dropText = document.getElementById('drop-zone-text');
+  if (dropText) dropText.textContent = screenshotMode === 'single'
+    ? 'Screenshot de fin de game (KDA + dégâts visibles)'
+    : 'Screenshot 1 : Scoreboard (KDA)';
 };
 
 window.confirmSave=async()=>{
